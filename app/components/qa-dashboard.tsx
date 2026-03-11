@@ -239,7 +239,7 @@ export default function QaDashboard() {
       </div>
 
       <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-5">
-        <h1 className="font-brand text-[42px] font-semibold tracking-[0.28em] text-transparent [text-shadow:0_0_34px_rgba(99,235,255,0.28)] bg-[linear-gradient(110deg,#dcf8ff_0%,#99ecff_38%,#8de5ff_62%,#f8fdff_100%)] bg-clip-text sm:text-[48px]">
+        <h1 className="font-brand text-[38px] font-semibold tracking-[0.28em] text-transparent [text-shadow:0_0_34px_rgba(99,235,255,0.28)] bg-[linear-gradient(110deg,#dcf8ff_0%,#99ecff_38%,#8de5ff_62%,#f8fdff_100%)] bg-clip-text sm:text-[48px]">
           SNIFF
         </h1>
 
