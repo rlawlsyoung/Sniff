@@ -12,16 +12,34 @@ export type QaScenario = {
   createdAt: string;
 };
 
+export type QaFeatureFile = {
+  id: string;
+  fileName: string;
+  featureNames: string[];
+  scenarios: QaScenario[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ScenarioStats = {
+  total: number;
+  todo: number;
+  passed: number;
+  failed: number;
+  passRate: number;
+};
+
 export type ParseFeatureResult = {
   scenarios: QaScenario[];
   featureCount: number;
+  featureNames: string[];
 };
 
 const STEP_PATTERN = /^(Given|When|Then|And|But|\*)\b/i;
 const SCENARIO_PATTERN = /^Scenario(?: Outline)?:\s*(.+)$/i;
 const FEATURE_PATTERN = /^Feature:\s*(.+)$/i;
 
-function createId() {
+export function createId() {
   if (
     typeof crypto !== "undefined" &&
     typeof crypto.randomUUID === "function"
@@ -38,6 +56,7 @@ export function parseFeatureText(
 ): ParseFeatureResult {
   const lines = input.split(/\r?\n/);
   const scenarios: QaScenario[] = [];
+  const featureNames: string[] = [];
 
   let currentFeature = "Untitled Feature";
   let currentScenarioIndex = -1;
@@ -54,6 +73,7 @@ export function parseFeatureText(
     const featureMatch = line.match(FEATURE_PATTERN);
     if (featureMatch) {
       currentFeature = featureMatch[1].trim() || "Untitled Feature";
+      featureNames.push(currentFeature);
       featureCount += 1;
       continue;
     }
@@ -101,6 +121,7 @@ export function parseFeatureText(
   return {
     scenarios,
     featureCount,
+    featureNames,
   };
 }
 
@@ -109,4 +130,14 @@ export function mergeScenarios(
   incoming: QaScenario[],
 ): QaScenario[] {
   return [...incoming, ...existing];
+}
+
+export function getScenarioStats(scenarios: QaScenario[]): ScenarioStats {
+  const total = scenarios.length;
+  const todo = scenarios.filter((item) => item.status === "todo").length;
+  const passed = scenarios.filter((item) => item.status === "passed").length;
+  const failed = scenarios.filter((item) => item.status === "failed").length;
+  const passRate = total > 0 ? Math.round((passed / total) * 100) : 0;
+
+  return { total, todo, passed, failed, passRate };
 }
