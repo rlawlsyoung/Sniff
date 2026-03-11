@@ -138,7 +138,6 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
             {featureFile.fileName}
           </h1>
           <p className="mt-2 text-sm text-slate-300">
-            포함 Feature:{" "}
             {featureFile.featureNames.join(", ") || "Untitled Feature"}
           </p>
           <p className="mt-1 text-xs text-slate-400">
