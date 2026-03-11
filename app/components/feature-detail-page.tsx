@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ScenarioStatus } from "../lib/gherkin";
+import { getScenarioStats, ScenarioStatus } from "../lib/gherkin";
 import { ScenarioCard } from "./qa/scenario-card";
+import { ScenarioStats } from "./qa/scenario-stats";
 import { useFeatureFiles } from "../hooks/use-feature-files";
 
 type FeatureDetailPageProps = {
@@ -32,6 +33,19 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
   const [filter, setFilter] = useState<FilterStatus>("all");
 
   const featureFile = featureFileMap.get(featureId);
+  const stats = useMemo(() => {
+    if (!featureFile) {
+      return {
+        total: 0,
+        todo: 0,
+        passed: 0,
+        failed: 0,
+        passRate: 0,
+      };
+    }
+
+    return getScenarioStats(featureFile.scenarios);
+  }, [featureFile]);
 
   const filteredScenarios = useMemo(() => {
     if (!featureFile) {
@@ -131,6 +145,13 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
             업데이트: {new Date(featureFile.updatedAt).toLocaleString()}
           </p>
         </section>
+
+        <ScenarioStats
+          scenarioTotal={stats.total}
+          todo={stats.todo}
+          passed={stats.passed}
+          failed={stats.failed}
+        />
 
         <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_14px_32px_rgba(0,0,0,0.28)] backdrop-blur-xl">
           <div className="flex flex-wrap items-center gap-2">

@@ -8,11 +8,9 @@ import {
   useMemo,
   useState,
 } from "react";
-import { DashboardStats } from "./qa/dashboard-stats";
 import { FeatureFileListSection } from "./qa/feature-file-list-section";
 import { FeatureImportPanel } from "./qa/feature-import-panel";
 import { useFeatureFiles } from "../hooks/use-feature-files";
-import { getScenarioStats } from "../lib/gherkin";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -29,12 +27,8 @@ function isFeatureLikeText(text: string) {
 }
 
 export default function QaDashboard() {
-  const {
-    featureFiles,
-    importFeatureText,
-    removeFeatureFile,
-    clearFeatureFiles,
-  } = useFeatureFiles();
+  const { featureFiles, importFeatureText, removeFeatureFile } =
+    useFeatureFiles();
   const [rawText, setRawText] = useState("");
   const [query, setQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -64,26 +58,6 @@ export default function QaDashboard() {
     const start = (activePage - 1) * ITEMS_PER_PAGE;
     return filtered.slice(start, start + ITEMS_PER_PAGE);
   }, [activePage, filtered]);
-
-  const stats = useMemo(() => {
-    return featureFiles.reduce(
-      (acc, file) => {
-        const fileStats = getScenarioStats(file.scenarios);
-        acc.scenarioTotal += fileStats.total;
-        acc.todo += fileStats.todo;
-        acc.passed += fileStats.passed;
-        acc.failed += fileStats.failed;
-        return acc;
-      },
-      {
-        fileCount: featureFiles.length,
-        scenarioTotal: 0,
-        todo: 0,
-        passed: 0,
-        failed: 0,
-      },
-    );
-  }, [featureFiles]);
 
   const applyImport = useCallback(
     (text: string, source?: string) => {
@@ -201,19 +175,6 @@ export default function QaDashboard() {
     setNotice({ type: "success", message: "Feature 파일을 삭제했습니다." });
   };
 
-  const onClearAll = () => {
-    const ok = window.confirm("모든 Feature 파일 리스트를 삭제할까요?");
-    if (!ok) {
-      return;
-    }
-
-    clearFeatureFiles();
-    setNotice({
-      type: "success",
-      message: "전체 Feature 리스트를 비웠습니다.",
-    });
-  };
-
   const importFeatureFile = async (file: File) => {
     if (
       !file.name.toLowerCase().endsWith(".feature") &&
@@ -282,14 +243,6 @@ export default function QaDashboard() {
           SNIFF
         </h1>
 
-        <DashboardStats
-          fileCount={stats.fileCount}
-          scenarioTotal={stats.scenarioTotal}
-          todo={stats.todo}
-          passed={stats.passed}
-          failed={stats.failed}
-        />
-
         <FeatureImportPanel
           isDragActive={isDragActive}
           rawText={rawText}
@@ -316,7 +269,6 @@ export default function QaDashboard() {
         <FeatureFileListSection
           query={query}
           onQueryChange={onQueryChange}
-          onClearAll={onClearAll}
           pagedItems={pagedItems}
           totalItems={filtered.length}
           currentPage={activePage}

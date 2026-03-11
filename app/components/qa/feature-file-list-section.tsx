@@ -5,7 +5,6 @@ import { PaginationControls } from "./pagination-controls";
 type FeatureFileListSectionProps = {
   query: string;
   onQueryChange: (value: string) => void;
-  onClearAll: () => void;
   pagedItems: QaFeatureFile[];
   totalItems: number;
   currentPage: number;
@@ -18,7 +17,6 @@ type FeatureFileListSectionProps = {
 export function FeatureFileListSection({
   query,
   onQueryChange,
-  onClearAll,
   pagedItems,
   totalItems,
   currentPage,
@@ -40,12 +38,6 @@ export function FeatureFileListSection({
           <span className="rounded-full border border-white/20 bg-black/25 px-3 py-2 text-xs text-slate-300">
             총 {totalItems}개
           </span>
-          <button
-            className="rounded-full border border-rose-300/40 bg-rose-300/10 px-4 py-2 text-sm font-semibold text-rose-100 transition hover:bg-rose-300/20"
-            onClick={onClearAll}
-          >
-            전체 삭제
-          </button>
         </div>
       </section>
 

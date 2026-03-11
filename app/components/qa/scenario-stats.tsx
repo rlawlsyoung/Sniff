@@ -1,29 +1,21 @@
-type DashboardStatsProps = {
-  fileCount: number;
+type ScenarioStatsProps = {
   scenarioTotal: number;
   todo: number;
   passed: number;
   failed: number;
 };
 
-export function DashboardStats({
-  fileCount,
+export function ScenarioStats({
   scenarioTotal,
   todo,
   passed,
   failed,
-}: DashboardStatsProps) {
+}: ScenarioStatsProps) {
   const passRate =
     scenarioTotal > 0 ? Math.round((passed / scenarioTotal) * 100) : 0;
 
   return (
-    <section className="grid gap-4 [animation:fade-up_420ms_ease-out_40ms_both] sm:grid-cols-2 lg:grid-cols-6">
-      <article className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 shadow-[0_12px_28px_rgba(0,0,0,0.25)] backdrop-blur-xl">
-        <p className="text-xs font-semibold tracking-[0.1em] text-slate-300">
-          Feature 파일
-        </p>
-        <p className="mt-2 text-3xl font-semibold text-white">{fileCount}</p>
-      </article>
+    <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
       <article className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 shadow-[0_12px_28px_rgba(0,0,0,0.25)] backdrop-blur-xl">
         <p className="text-xs font-semibold tracking-[0.1em] text-slate-300">
           시나리오
