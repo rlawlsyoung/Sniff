@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sniff QA Manager
 
-## Getting Started
+사내 QA를 Gherkin 문법으로 관리하기 위한 로컬 우선(offline-friendly) 웹 도구입니다.
 
-First, run the development server:
+## 핵심 기능
+
+- `.feature` 파일 붙여넣기 자동 파싱 (필수 기능)
+- `.feature` 파일 업로드/드래그 앤 드롭 파싱
+- Gherkin 텍스트 직접 붙여넣기 파싱
+- 시나리오 상태 관리: 미실행/통과/실패
+- 시나리오별 메모 관리
+- 검색/필터
+- `localStorage` 자동 저장
+
+## 로컬 실행
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+브라우저에서 `http://localhost:3000` 접속
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 사용 방법
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. `.feature` 파일을 복사한 뒤 화면에서 `Cmd+V`.
+2. 또는 파일을 드래그 앤 드롭/선택 업로드.
+3. 생성된 QA 리스트에서 상태를 업데이트하고 메모를 기록.
 
-## Learn More
+## 주의 사항
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 브라우저 보안 정책상 "파일 경로 문자열"만 붙여넣는 경우 파일 내용을 읽을 수 없습니다.
+- 이 경우 파일 자체를 붙여넣거나 업로드를 사용해야 합니다.
+# Sniff
