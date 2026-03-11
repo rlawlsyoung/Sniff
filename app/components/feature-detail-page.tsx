@@ -7,6 +7,7 @@ import { getScenarioStats, ScenarioStatus } from "../lib/gherkin";
 import { ScenarioCard } from "./qa/scenario-card";
 import { ScenarioStats } from "./qa/scenario-stats";
 import { useFeatureFiles } from "../hooks/use-feature-files";
+import { Popup } from "./ui/popup";
 
 type FeatureDetailPageProps = {
   featureId: string;
@@ -31,6 +32,7 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
   } = useFeatureFiles();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterStatus>("all");
+  const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
 
   const featureFile = featureFileMap.get(featureId);
   const stats = useMemo(() => {
@@ -77,17 +79,21 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
     });
   }, [featureFile, filter, query]);
 
-  const onDelete = () => {
+  const onDeleteClick = () => {
     if (!featureFile) {
       return;
     }
 
-    const ok = window.confirm("이 Feature 파일을 삭제할까요?");
-    if (!ok) {
+    setIsDeletePopupOpen(true);
+  };
+
+  const onConfirmDelete = () => {
+    if (!featureFile) {
       return;
     }
 
     removeFeatureFile(featureFile.id);
+    setIsDeletePopupOpen(false);
     router.push("/");
   };
 
@@ -127,7 +133,7 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
           </Link>
           <button
             className="rounded-full border border-rose-300/45 bg-rose-300/10 px-4 py-2 text-sm font-semibold text-rose-100 transition hover:bg-rose-300/20"
-            onClick={onDelete}
+            onClick={onDeleteClick}
           >
             이 파일 삭제
           </button>
@@ -197,6 +203,17 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
           )}
         </section>
       </div>
+
+      <Popup
+        open={isDeletePopupOpen}
+        title="Feature 파일을 삭제할까요?"
+        description="삭제 후에는 복구할 수 없습니다."
+        confirmLabel="삭제"
+        cancelLabel="취소"
+        tone="danger"
+        onClose={() => setIsDeletePopupOpen(false)}
+        onConfirm={onConfirmDelete}
+      />
     </div>
   );
 }

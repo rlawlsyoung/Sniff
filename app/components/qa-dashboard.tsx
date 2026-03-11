@@ -11,6 +11,7 @@ import {
 import { FeatureFileListSection } from "./qa/feature-file-list-section";
 import { FeatureImportPanel } from "./qa/feature-import-panel";
 import { useFeatureFiles } from "../hooks/use-feature-files";
+import { Popup } from "./ui/popup";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -34,6 +35,7 @@ export default function QaDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [notice, setNotice] = useState<ImportNotice | null>(null);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -166,12 +168,16 @@ export default function QaDashboard() {
   };
 
   const onDelete = (fileId: string) => {
-    const ok = window.confirm("해당 Feature 파일을 삭제할까요?");
-    if (!ok) {
+    setPendingDeleteId(fileId);
+  };
+
+  const onConfirmDelete = () => {
+    if (!pendingDeleteId) {
       return;
     }
 
-    removeFeatureFile(fileId);
+    removeFeatureFile(pendingDeleteId);
+    setPendingDeleteId(null);
     setNotice({ type: "success", message: "Feature 파일을 삭제했습니다." });
   };
 
@@ -239,7 +245,7 @@ export default function QaDashboard() {
       </div>
 
       <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-5">
-        <h1 className="font-brand text-[38px] font-semibold tracking-[0.28em] text-transparent [text-shadow:0_0_34px_rgba(99,235,255,0.28)] bg-[linear-gradient(110deg,#dcf8ff_0%,#99ecff_38%,#8de5ff_62%,#f8fdff_100%)] bg-clip-text sm:text-[48px]">
+        <h1 className="font-brand text-[38px] font-semibold tracking-[0.25em] text-transparent [text-shadow:0_0_34px_rgba(99,235,255,0.28)] bg-[linear-gradient(110deg,#dcf8ff_0%,#99ecff_38%,#8de5ff_62%,#f8fdff_100%)] bg-clip-text sm:text-[48px]">
           SNIFF
         </h1>
 
@@ -276,6 +282,17 @@ export default function QaDashboard() {
           onPrevPage={onPrevPage}
           onNextPage={onNextPage}
           onDelete={onDelete}
+        />
+
+        <Popup
+          open={Boolean(pendingDeleteId)}
+          title="Feature 파일을 삭제할까요?"
+          description="삭제 후에는 복구할 수 없습니다."
+          confirmLabel="삭제"
+          cancelLabel="취소"
+          tone="danger"
+          onClose={() => setPendingDeleteId(null)}
+          onConfirm={onConfirmDelete}
         />
       </div>
     </div>
