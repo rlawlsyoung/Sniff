@@ -38,9 +38,14 @@ export default function RootLayout({
         className={`${notoSansKr.variable} ${sourceCodePro.variable} ${spaceGrotesk.variable} antialiased`}
       >
         <QaPageShell includeBottomGlow>
-          <h1 className="font-brand text-[38px] font-semibold tracking-[0.25em] text-transparent [text-shadow:0_0_34px_rgba(99,235,255,0.28)] bg-[linear-gradient(110deg,#dcf8ff_0%,#99ecff_38%,#8de5ff_62%,#f8fdff_100%)] bg-clip-text sm:text-[48px]">
-            <Link href="/">SNIFF</Link>
-          </h1>
+          <div className="mb-3">
+            <h1 className="font-brand text-[38px] font-semibold tracking-[0.25em] text-transparent [text-shadow:0_0_34px_rgba(99,235,255,0.28)] bg-[linear-gradient(110deg,#dcf8ff_0%,#99ecff_38%,#8de5ff_62%,#f8fdff_100%)] bg-clip-text sm:text-[48px]">
+              <Link href="/">SNIFF</Link>
+            </h1>
+            <p className="text-sm text-slate-300">
+              Internal QA management tool for Gherkin feature scenarios
+            </p>
+          </div>
           {children}
         </QaPageShell>
       </body>
