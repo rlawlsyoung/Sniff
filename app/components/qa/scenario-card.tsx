@@ -1,4 +1,9 @@
-import { QaScenario, ScenarioStatus } from "../../lib/gherkin";
+import {
+  QaScenario,
+  QaTester,
+  ScenarioStatus,
+  TesterScenarioResult,
+} from "../../lib/gherkin";
 
 const STATUS_LABELS: Record<ScenarioStatus, string> = {
   todo: "미실행",
@@ -166,14 +171,22 @@ function buildDisplayRows(parsedSteps: ParsedStepRow[]): DisplayRow[] {
 
 type ScenarioCardProps = {
   scenario: QaScenario;
+  testers: QaTester[];
   onStatusChange: (id: string, status: ScenarioStatus) => void;
   onNoteChange: (id: string, note: string) => void;
+  onTesterResultChange: (
+    scenarioId: string,
+    testerId: string,
+    updates: Partial<Pick<TesterScenarioResult, "status" | "note">>,
+  ) => void;
 };
 
 export function ScenarioCard({
   scenario,
+  testers,
   onStatusChange,
   onNoteChange,
+  onTesterResultChange,
 }: ScenarioCardProps) {
   const parsedSteps = scenario.steps.map(parseStep);
   const displayRows = buildDisplayRows(parsedSteps);
@@ -340,32 +353,119 @@ export function ScenarioCard({
         <p className="mt-3 text-sm text-slate-400">등록된 Step이 없습니다.</p>
       )}
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {(["todo", "passed", "failed"] as ScenarioStatus[]).map((status) => (
-          <button
-            key={`${scenario.id}-${status}`}
-            className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition ${
-              scenario.status === status
-                ? status === "todo"
-                  ? "border-slate-200/80 bg-slate-200 text-slate-900"
-                  : status === "passed"
-                    ? "border-emerald-300/80 bg-emerald-300 text-emerald-950"
-                    : "border-rose-300/80 bg-rose-300 text-rose-950"
-                : STATUS_BUTTON_STYLES[status]
-            }`}
-            onClick={() => onStatusChange(scenario.id, status)}
-          >
-            {STATUS_LABELS[status]}
-          </button>
-        ))}
-      </div>
+      {testers.length === 0 ? (
+        <>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {(["todo", "passed", "failed"] as ScenarioStatus[]).map(
+              (status) => (
+                <button
+                  key={`${scenario.id}-${status}`}
+                  className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition ${
+                    scenario.status === status
+                      ? status === "todo"
+                        ? "border-slate-200/80 bg-slate-200 text-slate-900"
+                        : status === "passed"
+                          ? "border-emerald-300/80 bg-emerald-300 text-emerald-950"
+                          : "border-rose-300/80 bg-rose-300 text-rose-950"
+                      : STATUS_BUTTON_STYLES[status]
+                  }`}
+                  onClick={() => onStatusChange(scenario.id, status)}
+                >
+                  {STATUS_LABELS[status]}
+                </button>
+              ),
+            )}
+          </div>
 
-      <textarea
-        className="mt-3 h-24 w-full resize-y rounded-xl border border-white/15 bg-black/35 p-3 text-sm text-slate-100 outline-none ring-cyan-300/25 placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-4"
-        placeholder="실행 로그/이슈 메모"
-        value={scenario.note}
-        onChange={(event) => onNoteChange(scenario.id, event.target.value)}
-      />
+          <textarea
+            className="mt-3 h-24 w-full resize-y rounded-xl border border-white/15 bg-black/35 p-3 text-sm text-slate-100 outline-none ring-cyan-300/25 placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-4"
+            placeholder="실행 로그/이슈 메모"
+            value={scenario.note}
+            onChange={(event) => onNoteChange(scenario.id, event.target.value)}
+          />
+        </>
+      ) : (
+        <section className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-3.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-300">
+              QA 진행 기록
+            </p>
+            <p className="text-xs text-slate-400">
+              진행자 {testers.length}명, 댓글 {testers.length}개
+            </p>
+          </div>
+
+          <div className="mt-3 grid gap-3">
+            {testers.map((tester) => {
+              const result = scenario.testerResults[tester.id] ?? {
+                status: "todo",
+                note: "",
+              };
+              const testerMeta = [tester.device, tester.osVersion]
+                .filter((value) => value.trim().length > 0)
+                .join(" / ");
+
+              return (
+                <div
+                  key={`${scenario.id}-${tester.id}`}
+                  className="rounded-xl border border-white/10 bg-white/5 p-3"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-100">
+                        {tester.name}
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        {testerMeta || "기기/OS 정보 미입력"}
+                      </p>
+                    </div>
+                    <span className="rounded-full border border-white/20 bg-black/35 px-2.5 py-1 text-xs text-slate-200">
+                      {STATUS_LABELS[result.status]}
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {(["todo", "passed", "failed"] as ScenarioStatus[]).map(
+                      (status) => (
+                        <button
+                          key={`${scenario.id}-${tester.id}-${status}`}
+                          className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                            result.status === status
+                              ? status === "todo"
+                                ? "border-slate-200/80 bg-slate-200 text-slate-900"
+                                : status === "passed"
+                                  ? "border-emerald-300/80 bg-emerald-300 text-emerald-950"
+                                  : "border-rose-300/80 bg-rose-300 text-rose-950"
+                              : STATUS_BUTTON_STYLES[status]
+                          }`}
+                          onClick={() =>
+                            onTesterResultChange(scenario.id, tester.id, {
+                              status,
+                            })
+                          }
+                        >
+                          {STATUS_LABELS[status]}
+                        </button>
+                      ),
+                    )}
+                  </div>
+
+                  <textarea
+                    className="mt-2 h-20 w-full resize-y rounded-lg border border-white/15 bg-black/35 p-2.5 text-sm text-slate-100 outline-none ring-cyan-300/25 placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-4"
+                    placeholder={`${tester.name} 진행 메모`}
+                    value={result.note}
+                    onChange={(event) =>
+                      onTesterResultChange(scenario.id, tester.id, {
+                        note: event.target.value,
+                      })
+                    }
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </article>
   );
 }

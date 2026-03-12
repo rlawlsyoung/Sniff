@@ -1,5 +1,20 @@
 export type ScenarioStatus = "todo" | "passed" | "failed";
 
+export type QaTester = {
+  id: string;
+  name: string;
+  device: string;
+  osVersion: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TesterScenarioResult = {
+  status: ScenarioStatus;
+  note: string;
+  updatedAt: string;
+};
+
 export type QaScenario = {
   id: string;
   feature: string;
@@ -9,6 +24,7 @@ export type QaScenario = {
   source: string;
   status: ScenarioStatus;
   note: string;
+  testerResults: Record<string, TesterScenarioResult>;
   createdAt: string;
 };
 
@@ -17,6 +33,7 @@ export type QaFeatureFile = {
   fileName: string;
   featureNames: string[];
   scenarios: QaScenario[];
+  testers: QaTester[];
   createdAt: string;
   updatedAt: string;
 };
@@ -98,6 +115,7 @@ export function parseFeatureText(
         source,
         status: "todo",
         note: "",
+        testerResults: {},
         createdAt: new Date().toISOString(),
       });
       currentScenarioIndex = scenarios.length - 1;
@@ -140,4 +158,27 @@ export function getScenarioStats(scenarios: QaScenario[]): ScenarioStats {
   const passRate = total > 0 ? Math.round((passed / total) * 100) : 0;
 
   return { total, todo, passed, failed, passRate };
+}
+
+export function getScenarioStatusByTesterResults(
+  scenario: Pick<QaScenario, "status" | "testerResults">,
+  testers: Pick<QaTester, "id">[],
+): ScenarioStatus {
+  if (testers.length === 0) {
+    return scenario.status;
+  }
+
+  const statuses = testers.map(
+    (tester) => scenario.testerResults[tester.id]?.status ?? "todo",
+  );
+
+  if (statuses.some((status) => status === "failed")) {
+    return "failed";
+  }
+
+  if (statuses.every((status) => status === "passed")) {
+    return "passed";
+  }
+
+  return "todo";
 }

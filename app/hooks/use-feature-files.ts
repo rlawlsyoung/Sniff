@@ -6,7 +6,10 @@ import {
   parseFeatureText,
   QaFeatureFile,
   QaScenario,
+  QaTester,
   ScenarioStatus,
+  TesterScenarioResult,
+  getScenarioStatusByTesterResults,
 } from "../lib/gherkin";
 
 const STORAGE_KEY = "sniff.qa.features.v1";
@@ -30,11 +33,184 @@ type GroupedScenario = {
   scenarios: QaScenario[];
 };
 
+type TesterDraft = {
+  name: string;
+  device: string;
+  osVersion: string;
+};
+
+function toScenarioStatus(value: unknown): ScenarioStatus {
+  if (value === "passed" || value === "failed" || value === "todo") {
+    return value;
+  }
+
+  return "todo";
+}
+
+function normalizeTester(value: unknown): QaTester | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const candidate = value as Partial<QaTester>;
+  const now = new Date().toISOString();
+  const name = candidate.name?.trim();
+
+  if (!name) {
+    return null;
+  }
+
+  return {
+    id:
+      typeof candidate.id === "string" && candidate.id
+        ? candidate.id
+        : createId(),
+    name,
+    device: typeof candidate.device === "string" ? candidate.device.trim() : "",
+    osVersion:
+      typeof candidate.osVersion === "string" ? candidate.osVersion.trim() : "",
+    createdAt:
+      typeof candidate.createdAt === "string" && candidate.createdAt
+        ? candidate.createdAt
+        : now,
+    updatedAt:
+      typeof candidate.updatedAt === "string" && candidate.updatedAt
+        ? candidate.updatedAt
+        : now,
+  };
+}
+
+function normalizeTesterResults(
+  value: unknown,
+): Record<string, TesterScenarioResult> {
+  if (!value || typeof value !== "object") {
+    return {};
+  }
+
+  const entries = Object.entries(value as Record<string, unknown>);
+  const normalized: Record<string, TesterScenarioResult> = {};
+
+  for (const [testerId, result] of entries) {
+    if (!testerId || !result || typeof result !== "object") {
+      continue;
+    }
+
+    const candidate = result as Partial<TesterScenarioResult>;
+    normalized[testerId] = {
+      status: toScenarioStatus(candidate.status),
+      note: typeof candidate.note === "string" ? candidate.note : "",
+      updatedAt:
+        typeof candidate.updatedAt === "string" && candidate.updatedAt
+          ? candidate.updatedAt
+          : new Date().toISOString(),
+    };
+  }
+
+  return normalized;
+}
+
+function normalizeScenario(value: unknown): QaScenario | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const candidate = value as Partial<QaScenario>;
+  const now = new Date().toISOString();
+
+  return {
+    id:
+      typeof candidate.id === "string" && candidate.id
+        ? candidate.id
+        : createId(),
+    feature:
+      typeof candidate.feature === "string" && candidate.feature.trim()
+        ? candidate.feature
+        : "Untitled Feature",
+    title:
+      typeof candidate.title === "string" && candidate.title.trim()
+        ? candidate.title
+        : "Untitled Scenario",
+    tags: Array.isArray(candidate.tags)
+      ? candidate.tags.filter((tag): tag is string => typeof tag === "string")
+      : [],
+    steps: Array.isArray(candidate.steps)
+      ? candidate.steps.filter(
+          (step): step is string => typeof step === "string",
+        )
+      : [],
+    source:
+      typeof candidate.source === "string" && candidate.source
+        ? candidate.source
+        : "legacy-import.feature",
+    status: toScenarioStatus(candidate.status),
+    note: typeof candidate.note === "string" ? candidate.note : "",
+    testerResults: normalizeTesterResults(candidate.testerResults),
+    createdAt:
+      typeof candidate.createdAt === "string" && candidate.createdAt
+        ? candidate.createdAt
+        : now,
+  };
+}
+
+function normalizeFeatureFile(value: unknown): QaFeatureFile | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const candidate = value as Partial<QaFeatureFile>;
+  const scenarios = Array.isArray(candidate.scenarios)
+    ? candidate.scenarios
+        .map((scenario) => normalizeScenario(scenario))
+        .filter((scenario): scenario is QaScenario => Boolean(scenario))
+    : [];
+  const testers = Array.isArray(candidate.testers)
+    ? candidate.testers
+        .map((tester) => normalizeTester(tester))
+        .filter((tester): tester is QaTester => Boolean(tester))
+    : [];
+
+  const now = new Date().toISOString();
+  const normalizedScenarios = scenarios.map((scenario) => ({
+    ...scenario,
+    status: getScenarioStatusByTesterResults(scenario, testers),
+  }));
+  const scenarioFeatureNames = normalizedScenarios.map((item) => item.feature);
+
+  return {
+    id:
+      typeof candidate.id === "string" && candidate.id
+        ? candidate.id
+        : createId(),
+    fileName:
+      typeof candidate.fileName === "string" && candidate.fileName.trim()
+        ? candidate.fileName
+        : "legacy-import.feature",
+    featureNames:
+      Array.isArray(candidate.featureNames) && candidate.featureNames.length > 0
+        ? candidate.featureNames.filter(
+            (name): name is string =>
+              typeof name === "string" && name.trim().length > 0,
+          )
+        : Array.from(new Set(scenarioFeatureNames)),
+    scenarios: normalizedScenarios,
+    testers,
+    createdAt:
+      typeof candidate.createdAt === "string" && candidate.createdAt
+        ? candidate.createdAt
+        : now,
+    updatedAt:
+      typeof candidate.updatedAt === "string" && candidate.updatedAt
+        ? candidate.updatedAt
+        : now,
+  };
+}
+
 function createFeatureFile(params: {
   id?: string;
   fileName: string;
   scenarios: QaScenario[];
   featureNames?: string[];
+  testers?: QaTester[];
   createdAt?: string;
 }): QaFeatureFile {
   const now = new Date().toISOString();
@@ -48,7 +224,12 @@ function createFeatureFile(params: {
     id: params.id ?? createId(),
     fileName: params.fileName,
     featureNames,
-    scenarios: params.scenarios,
+    scenarios: params.scenarios.map((scenario) => ({
+      ...scenario,
+      testerResults: scenario.testerResults ?? {},
+      status: getScenarioStatusByTesterResults(scenario, params.testers ?? []),
+    })),
+    testers: params.testers ?? [],
     createdAt: params.createdAt ?? now,
     updatedAt: now,
   };
@@ -92,6 +273,7 @@ function loadLegacyFeatureFiles(): QaFeatureFile[] {
       createFeatureFile({
         fileName: group.source,
         scenarios: group.scenarios,
+        testers: [],
       }),
     );
   } catch {
@@ -109,7 +291,9 @@ function loadFeatureFiles(): QaFeatureFile[] {
     try {
       const parsed = JSON.parse(raw) as QaFeatureFile[];
       if (Array.isArray(parsed)) {
-        return parsed;
+        return parsed
+          .map((item) => normalizeFeatureFile(item))
+          .filter((item): item is QaFeatureFile => Boolean(item));
       }
     } catch {
       return [];
@@ -170,6 +354,7 @@ export function useFeatureFiles() {
           fileName: existing.fileName,
           scenarios: newFile.scenarios,
           featureNames: newFile.featureNames,
+          testers: existing.testers,
           createdAt: existing.createdAt,
         });
 
@@ -198,7 +383,12 @@ export function useFeatureFiles() {
           }
 
           const updatedScenarios = file.scenarios.map((scenario) =>
-            scenario.id === scenarioId ? { ...scenario, status } : scenario,
+            scenario.id === scenarioId
+              ? {
+                  ...scenario,
+                  status,
+                }
+              : scenario,
           );
 
           return {
@@ -221,7 +411,12 @@ export function useFeatureFiles() {
           }
 
           const updatedScenarios = file.scenarios.map((scenario) =>
-            scenario.id === scenarioId ? { ...scenario, note } : scenario,
+            scenario.id === scenarioId
+              ? {
+                  ...scenario,
+                  note,
+                }
+              : scenario,
           );
 
           return {
@@ -241,6 +436,200 @@ export function useFeatureFiles() {
     );
   }, []);
 
+  const addTester = useCallback((fileId: string, draft: TesterDraft) => {
+    const trimmedName = draft.name.trim();
+    if (!trimmedName) {
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const tester: QaTester = {
+      id: createId(),
+      name: trimmedName,
+      device: draft.device.trim(),
+      osVersion: draft.osVersion.trim(),
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    setFeatureFiles((previous) =>
+      previous.map((file) => {
+        if (file.id !== fileId) {
+          return file;
+        }
+
+        const nextTesters = [...file.testers, tester];
+        const shouldSeedLegacyValues = file.testers.length === 0;
+        const updatedScenarios = file.scenarios.map((scenario) => {
+          const seededResult: TesterScenarioResult = shouldSeedLegacyValues
+            ? {
+                status: scenario.status,
+                note: scenario.note,
+                updatedAt: now,
+              }
+            : {
+                status: "todo",
+                note: "",
+                updatedAt: now,
+              };
+
+          const testerResults = {
+            ...scenario.testerResults,
+            [tester.id]: seededResult,
+          };
+
+          return {
+            ...scenario,
+            testerResults,
+            status: getScenarioStatusByTesterResults(
+              { ...scenario, testerResults },
+              nextTesters,
+            ),
+          };
+        });
+
+        return {
+          ...file,
+          testers: nextTesters,
+          scenarios: updatedScenarios,
+          updatedAt: now,
+        };
+      }),
+    );
+  }, []);
+
+  const updateTester = useCallback(
+    (fileId: string, testerId: string, draft: TesterDraft) => {
+      const trimmedName = draft.name.trim();
+      if (!trimmedName) {
+        return;
+      }
+
+      const now = new Date().toISOString();
+
+      setFeatureFiles((previous) =>
+        previous.map((file) => {
+          if (file.id !== fileId) {
+            return file;
+          }
+
+          const updatedTesters = file.testers.map((tester) =>
+            tester.id === testerId
+              ? {
+                  ...tester,
+                  name: trimmedName,
+                  device: draft.device.trim(),
+                  osVersion: draft.osVersion.trim(),
+                  updatedAt: now,
+                }
+              : tester,
+          );
+
+          return {
+            ...file,
+            testers: updatedTesters,
+            updatedAt: now,
+          };
+        }),
+      );
+    },
+    [],
+  );
+
+  const removeTester = useCallback((fileId: string, testerId: string) => {
+    const now = new Date().toISOString();
+
+    setFeatureFiles((previous) =>
+      previous.map((file) => {
+        if (file.id !== fileId) {
+          return file;
+        }
+
+        const nextTesters = file.testers.filter(
+          (tester) => tester.id !== testerId,
+        );
+        const updatedScenarios = file.scenarios.map((scenario) => {
+          const testerResults = { ...scenario.testerResults };
+          delete testerResults[testerId];
+
+          return {
+            ...scenario,
+            testerResults,
+            status: getScenarioStatusByTesterResults(
+              { ...scenario, testerResults },
+              nextTesters,
+            ),
+          };
+        });
+
+        return {
+          ...file,
+          testers: nextTesters,
+          scenarios: updatedScenarios,
+          updatedAt: now,
+        };
+      }),
+    );
+  }, []);
+
+  const updateScenarioTesterResult = useCallback(
+    (
+      fileId: string,
+      scenarioId: string,
+      testerId: string,
+      updates: Partial<Pick<TesterScenarioResult, "status" | "note">>,
+    ) => {
+      const now = new Date().toISOString();
+
+      setFeatureFiles((previous) =>
+        previous.map((file) => {
+          if (file.id !== fileId) {
+            return file;
+          }
+
+          const updatedScenarios = file.scenarios.map((scenario) => {
+            if (scenario.id !== scenarioId) {
+              return scenario;
+            }
+
+            const currentResult = scenario.testerResults[testerId] ?? {
+              status: "todo",
+              note: "",
+              updatedAt: now,
+            };
+
+            const nextResult: TesterScenarioResult = {
+              status: updates.status ?? currentResult.status,
+              note: updates.note ?? currentResult.note,
+              updatedAt: now,
+            };
+
+            const testerResults = {
+              ...scenario.testerResults,
+              [testerId]: nextResult,
+            };
+
+            return {
+              ...scenario,
+              testerResults,
+              status: getScenarioStatusByTesterResults(
+                { ...scenario, testerResults },
+                file.testers,
+              ),
+            };
+          });
+
+          return {
+            ...file,
+            scenarios: updatedScenarios,
+            updatedAt: now,
+          };
+        }),
+      );
+    },
+    [],
+  );
+
   const clearFeatureFiles = useCallback(() => {
     setFeatureFiles([]);
   }, []);
@@ -255,6 +644,10 @@ export function useFeatureFiles() {
     importFeatureText,
     updateScenarioStatus,
     updateScenarioNote,
+    addTester,
+    updateTester,
+    removeTester,
+    updateScenarioTesterResult,
     removeFeatureFile,
     clearFeatureFiles,
   };
