@@ -24,6 +24,7 @@
 - Persist data on server-side file storage (`data/feature-files.json`) or configured file path.
 - Treat `.feature` paste/import parsing as a required path.
 - Maintain clean, readable UI with Google-like simplicity.
+- When major behavior or architecture changes are made, update `AGENTS.md` in the same task so team guidance stays current.
 
 ## Proven Patterns
 
@@ -31,6 +32,9 @@
 - Implement clipboard automation in client component with `window` paste listener and `ClipboardEvent.clipboardData.items` file detection.
 - Only auto-import when `.feature` file object is present in clipboard; plain path strings cannot be read due to browser sandbox.
 - Use `useFeatureFiles` API sync flow: load via `GET /api/feature-files`, save via `PUT /api/feature-files/[fileId]`, remove via `DELETE /api/feature-files/[fileId]`.
+- For multi-PC stale writes, send `baseUpdatedAt` from client and merge on server in `app/lib/server/feature-files-store.ts` instead of last-write overwrite.
+- Resolve stale-write conflicts by merging testers, scenario tester results (latest `updatedAt` wins per tester result), and recalculating aggregate scenario status.
+- In `useFeatureFiles`, avoid mutable sync flags that are set inside `setState` updaters; compute mutations from `featureFilesRef.current` and schedule sync immediately after committing next state.
 - Server store default path is `data/feature-files.json`, override with env `SNIFF_DATA_FILE`.
 
 ## Verified Commands

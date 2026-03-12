@@ -60,6 +60,7 @@ export function useFeatureFiles() {
   const [syncError, setSyncError] = useState<string | null>(null);
 
   const featureFilesRef = useRef<QaFeatureFile[]>([]);
+  const serverUpdatedAtRef = useRef<Map<string, string>>(new Map());
   const syncTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map(),
   );
@@ -85,6 +86,12 @@ export function useFeatureFiles() {
             .filter((item): item is QaFeatureFile => Boolean(item))
         : [];
 
+      const nextServerUpdatedAt = new Map<string, string>();
+      for (const item of normalized) {
+        nextServerUpdatedAt.set(item.id, item.updatedAt);
+      }
+      serverUpdatedAtRef.current = nextServerUpdatedAt;
+
       setFeatureFiles(sortFeatureFiles(normalized));
       setSyncError(null);
     } catch {
@@ -102,6 +109,8 @@ export function useFeatureFiles() {
       return;
     }
 
+    const baseUpdatedAt = serverUpdatedAtRef.current.get(fileId);
+
     try {
       const response = await fetch(
         `/api/feature-files/${encodeURIComponent(fileId)}`,
@@ -112,6 +121,7 @@ export function useFeatureFiles() {
           },
           body: JSON.stringify({
             featureFile: target,
+            baseUpdatedAt,
           }),
         },
       );
@@ -126,6 +136,9 @@ export function useFeatureFiles() {
       if (!saved) {
         throw new Error("invalid-sync-response");
       }
+
+      serverUpdatedAtRef.current.delete(fileId);
+      serverUpdatedAtRef.current.set(saved.id, saved.updatedAt);
 
       setFeatureFiles((previous) =>
         replaceFeatureFile(previous, saved, fileId),
@@ -180,29 +193,31 @@ export function useFeatureFiles() {
 
   const applyFeatureFileMutation = useCallback(
     (fileId: string, mutate: (file: QaFeatureFile) => QaFeatureFile | null) => {
-      let shouldSync = false;
+      const previous = featureFilesRef.current;
+      let didMutate = false;
 
-      setFeatureFiles((previous) => {
-        const next = previous.map((file) => {
-          if (file.id !== fileId) {
-            return file;
-          }
+      const next = previous.map((file) => {
+        if (file.id !== fileId) {
+          return file;
+        }
 
-          const updated = mutate(file);
-          if (!updated) {
-            return file;
-          }
+        const updated = mutate(file);
+        if (!updated) {
+          return file;
+        }
 
-          shouldSync = true;
-          return updated;
-        });
-
-        return shouldSync ? sortFeatureFiles(next) : previous;
+        didMutate = true;
+        return updated;
       });
 
-      if (shouldSync) {
-        scheduleFeatureFileSync(fileId);
+      if (!didMutate) {
+        return;
       }
+
+      const sorted = sortFeatureFiles(next);
+      featureFilesRef.current = sorted;
+      setFeatureFiles(sorted);
+      scheduleFeatureFileSync(fileId);
     },
     [scheduleFeatureFileSync],
   );
@@ -324,6 +339,7 @@ export function useFeatureFiles() {
   const removeFeatureFile = useCallback(
     (fileId: string) => {
       cancelFeatureFileSync(fileId);
+      serverUpdatedAtRef.current.delete(fileId);
 
       setFeatureFiles((previous) =>
         previous.filter((item) => item.id !== fileId),
@@ -533,6 +549,7 @@ export function useFeatureFiles() {
       clearTimeout(timer);
     }
     syncTimersRef.current.clear();
+    serverUpdatedAtRef.current.clear();
 
     setFeatureFiles([]);
 

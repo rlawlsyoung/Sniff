@@ -16,6 +16,7 @@ type RouteContext = {
 
 type UpsertFeatureFileBody = {
   featureFile?: QaFeatureFile;
+  baseUpdatedAt?: string;
 };
 
 export async function PUT(request: Request, { params }: RouteContext) {
@@ -35,10 +36,20 @@ export async function PUT(request: Request, { params }: RouteContext) {
     );
   }
 
-  const saved = await upsertFeatureFile({
-    ...body.featureFile,
-    id: fileId,
-  });
+  const baseUpdatedAt =
+    typeof body.baseUpdatedAt === "string" && body.baseUpdatedAt
+      ? body.baseUpdatedAt
+      : undefined;
+
+  const saved = await upsertFeatureFile(
+    {
+      ...body.featureFile,
+      id: fileId,
+    },
+    {
+      baseUpdatedAt,
+    },
+  );
 
   return NextResponse.json({ featureFile: saved });
 }
