@@ -11,6 +11,7 @@ import {
 } from "../../../lib/gherkin";
 import { ScenarioCard } from "../scenario-card";
 import { ScenarioStats } from "../scenario-stats";
+import { ChipButton } from "../../ui/chip-button";
 
 type FilterStatus = "all" | ScenarioStatus;
 type FeatureFilter = "all" | string;
@@ -139,8 +140,10 @@ export function FeatureScenariosSection({
             </div>
 
             {hasActiveFilters ? (
-              <button
-                className="rounded-full border border-white/15 bg-black/30 px-4 py-1.5 text-xs font-medium text-slate-300 transition hover:border-white/35 hover:text-slate-100"
+              <ChipButton
+                variant="subtle"
+                size="mdCompact"
+                className="px-4 text-xs font-medium"
                 onClick={() => {
                   setFeatureFilter("all");
                   setStatusFilter("all");
@@ -148,7 +151,7 @@ export function FeatureScenariosSection({
                 }}
               >
                 필터 초기화
-              </button>
+              </ChipButton>
             ) : null}
           </div>
 
@@ -166,9 +169,11 @@ export function FeatureScenariosSection({
                     : (featureScenarioCountMap.get(item) ?? 0);
 
                   return (
-                    <button
+                    <ChipButton
                       key={item}
-                      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${
+                      variant="custom"
+                      size="mdCompact"
+                      className={`gap-2 font-medium ${
                         featureFilter === item
                           ? "border-emerald-300/55 bg-emerald-300/12 text-emerald-100"
                           : "border-white/15 bg-slate-900/40 text-slate-300 hover:border-white/35 hover:bg-slate-800/60 hover:text-slate-100"
@@ -185,7 +190,7 @@ export function FeatureScenariosSection({
                       >
                         {count}
                       </span>
-                    </button>
+                    </ChipButton>
                   );
                 })}
               </div>
@@ -197,9 +202,11 @@ export function FeatureScenariosSection({
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {STATUS_FILTERS.map((item) => (
-                  <button
+                  <ChipButton
                     key={item.value}
-                    className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${
+                    variant="custom"
+                    size="mdCompact"
+                    className={`gap-2 font-medium ${
                       statusFilter === item.value
                         ? "border-cyan-300/55 bg-cyan-300/12 text-cyan-100"
                         : "border-white/15 bg-slate-900/40 text-slate-300 hover:border-white/35 hover:bg-slate-800/60 hover:text-slate-100"
@@ -216,7 +223,7 @@ export function FeatureScenariosSection({
                     >
                       {statusCountMap[item.value]}
                     </span>
-                  </button>
+                  </ChipButton>
                 ))}
               </div>
             </div>
@@ -253,12 +260,14 @@ export function FeatureScenariosSection({
               onChange={(event) => setQuery(event.target.value)}
             />
             {query ? (
-              <button
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs text-slate-300 transition hover:border-white/30 hover:text-slate-100"
+              <ChipButton
+                variant="ghost"
+                size="xs"
+                className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-0.5"
                 onClick={() => setQuery("")}
               >
                 지우기
-              </button>
+              </ChipButton>
             ) : null}
           </div>
         </div>

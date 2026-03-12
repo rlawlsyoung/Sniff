@@ -4,6 +4,7 @@ import {
   ScenarioStatus,
   TesterScenarioResult,
 } from "../../lib/gherkin";
+import { ChipButton } from "../ui/chip-button";
 
 const STATUS_LABELS: Record<ScenarioStatus, string> = {
   todo: "미실행",
@@ -399,9 +400,11 @@ export function ScenarioCard({
                   <div className="mt-2 flex flex-wrap gap-2">
                     {(["todo", "passed", "failed"] as ScenarioStatus[]).map(
                       (status) => (
-                        <button
+                        <ChipButton
                           key={`${scenario.id}-${tester.id}-${status}`}
-                          className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                          variant="custom"
+                          size="xs"
+                          className={`px-3 font-semibold ${
                             result.status === status
                               ? status === "todo"
                                 ? "border-slate-200/80 bg-slate-200 text-slate-900"
@@ -417,7 +420,7 @@ export function ScenarioCard({
                           }
                         >
                           {STATUS_LABELS[status]}
-                        </button>
+                        </ChipButton>
                       ),
                     )}
                   </div>

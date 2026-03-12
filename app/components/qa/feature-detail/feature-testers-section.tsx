@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { QaTester } from "../../../lib/gherkin";
 import { Popup } from "../../ui/popup";
+import { ChipButton } from "../../ui/chip-button";
 
 type TesterFormState = {
   name: string;
@@ -163,12 +164,14 @@ export function FeatureTestersSection({
             }))
           }
         />
-        <button
-          className="rounded-full border border-cyan-300/45 bg-cyan-300/12 px-4 py-1.5 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/20 md:self-center"
+        <ChipButton
+          variant="accent"
+          size="mdCompact"
+          className="px-4 font-semibold md:self-center"
           onClick={onTesterAdd}
         >
           진행자 추가
-        </button>
+        </ChipButton>
       </div>
 
       {newTesterFormError ? (
@@ -222,24 +225,30 @@ export function FeatureTestersSection({
                       }))
                     }
                   />
-                  <button
-                    className="rounded-full border border-cyan-300/45 bg-cyan-300/12 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-300/20 md:self-center"
+                  <ChipButton
+                    variant="accent"
+                    size="sm"
+                    className="font-semibold md:self-center"
                     onClick={onTesterEditSave}
                   >
                     저장
-                  </button>
-                  <button
-                    className="rounded-full border border-white/20 bg-black/35 px-3 py-1.5 text-xs text-slate-200 transition hover:border-white/40 md:self-center"
+                  </ChipButton>
+                  <ChipButton
+                    variant="neutral"
+                    size="sm"
+                    className="md:self-center"
                     onClick={onCancelTesterEdit}
                   >
                     취소
-                  </button>
-                  <button
-                    className="rounded-full border border-rose-300/40 bg-rose-300/10 px-3 py-1.5 text-xs text-rose-100 transition hover:bg-rose-300/20 md:self-center"
+                  </ChipButton>
+                  <ChipButton
+                    variant="danger"
+                    size="sm"
+                    className="md:self-center"
                     onClick={() => setPendingDeleteTesterId(tester.id)}
                   >
                     삭제
-                  </button>
+                  </ChipButton>
 
                   {editingTesterFormError ? (
                     <p className="text-xs text-rose-200 md:col-span-6">
@@ -262,18 +271,22 @@ export function FeatureTestersSection({
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <button
-                      className="rounded-full border border-white/20 bg-black/35 px-3 py-1 text-xs text-slate-200 transition hover:border-white/40"
+                    <ChipButton
+                      variant="neutral"
+                      size="xs"
+                      className="px-3"
                       onClick={() => onTesterEditClick(tester.id)}
                     >
                       수정
-                    </button>
-                    <button
-                      className="rounded-full border border-rose-300/40 bg-rose-300/10 px-3 py-1 text-xs text-rose-100 transition hover:bg-rose-300/20"
+                    </ChipButton>
+                    <ChipButton
+                      variant="danger"
+                      size="xs"
+                      className="px-3"
                       onClick={() => setPendingDeleteTesterId(tester.id)}
                     >
                       삭제
-                    </button>
+                    </ChipButton>
                   </div>
                 </div>
               )}

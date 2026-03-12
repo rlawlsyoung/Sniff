@@ -3,6 +3,7 @@
 import { KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { QaFeatureFile, getScenarioStats } from "../../lib/gherkin";
+import { ChipButton } from "../ui/chip-button";
 
 type FeatureFileCardProps = {
   featureFile: QaFeatureFile;
@@ -29,7 +30,7 @@ export function FeatureFileCard({
 
   return (
     <article
-      className="rounded-2xl border border-white/10 bg-white/[0.04] cursor-pointer p-5 shadow-[0_14px_32px_rgba(0,0,0,0.28)] backdrop-blur-xl transition hover:border-cyan-200/40 hover:bg-white/[0.06]"
+      className="cursor-pointer rounded-2xl border border-white/10 bg-white/4 p-5 shadow-[0_14px_32px_rgba(0,0,0,0.28)] backdrop-blur-xl transition hover:border-cyan-200/40 hover:bg-white/6"
       role="link"
       tabIndex={0}
       onClick={onOpenDetail}
@@ -62,15 +63,17 @@ export function FeatureFileCard({
             실패 {stats.failed}
           </span>
         </div>
-        <button
-          className="rounded-full border border-rose-300/45 bg-rose-300/10 px-4 py-1.5 text-sm font-semibold text-rose-100 transition hover:bg-rose-300/20"
+        <ChipButton
+          variant="danger"
+          size="mdCompact"
+          className="font-semibold"
           onClick={(event) => {
             event.stopPropagation();
             onDelete(featureFile.id);
           }}
         >
           삭제
-        </button>
+        </ChipButton>
       </div>
     </article>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
+import { ChipButton } from "./chip-button";
 
 type PopupTone = "default" | "danger";
 
@@ -51,27 +52,18 @@ export function Popup({
           <div className="mt-6 flex items-center justify-end gap-2">
             {cancelLabel ? (
               <AlertDialog.Cancel asChild>
-                <button
-                  type="button"
-                  className="rounded-full border border-white/20 bg-black/30 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/40"
-                >
-                  {cancelLabel}
-                </button>
+                <ChipButton className="font-medium">{cancelLabel}</ChipButton>
               </AlertDialog.Cancel>
             ) : null}
 
             <AlertDialog.Action asChild>
-              <button
-                type="button"
-                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                  tone === "danger"
-                    ? "border-rose-300/45 bg-rose-300/10 text-rose-100 hover:bg-rose-300/20"
-                    : "border-cyan-300/55 bg-cyan-300/15 text-cyan-100 hover:bg-cyan-300/22"
-                }`}
+              <ChipButton
+                variant={tone === "danger" ? "danger" : "accent"}
+                className="font-semibold"
                 onClick={onConfirm}
               >
                 {confirmLabel}
-              </button>
+              </ChipButton>
             </AlertDialog.Action>
           </div>
         </AlertDialog.Content>

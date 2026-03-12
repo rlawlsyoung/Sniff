@@ -9,6 +9,7 @@ import { useFeatureFiles } from "../hooks/use-feature-files";
 import { FeatureDetailHeaderSection } from "./qa/feature-detail/feature-detail-header-section";
 import { FeatureScenariosSection } from "./qa/feature-detail/feature-scenarios-section";
 import { FeatureTestersSection } from "./qa/feature-detail/feature-testers-section";
+import { chipButtonClassName } from "./ui/chip-button";
 
 type FeatureDetailPageProps = {
   featureId: string;
@@ -57,10 +58,7 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
   if (!featureFile) {
     return (
       <QaPageShell maxWidthClassName="max-w-4xl" contentGapClassName="gap-4">
-        <Link
-          href="/"
-          className="w-fit rounded-full border border-white/20 bg-black/30 px-4 py-2 text-sm text-slate-200"
-        >
+        <Link href="/" className={chipButtonClassName({ className: "w-fit" })}>
           메인으로 돌아가기
         </Link>
         <div className="rounded-2xl border border-dashed border-white/30 bg-white/3 p-8 text-center text-sm text-slate-300">

@@ -28,7 +28,7 @@ function isFeatureLikeText(text: string) {
   );
 }
 
-export default function QaDashboard() {
+export default function QaDashboardPage() {
   const { featureFiles, importFeatureText, removeFeatureFile } =
     useFeatureFiles();
   const [rawText, setRawText] = useState("");

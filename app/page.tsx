@@ -1,5 +1,5 @@
-import QaDashboard from "./components/qa-dashboard";
+import QaDashboardPage from "./components/qa-dashboard-page";
 
 export default function Home() {
-  return <QaDashboard />;
+  return <QaDashboardPage />;
 }
