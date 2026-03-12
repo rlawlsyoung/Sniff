@@ -10,8 +10,9 @@ import {
 } from "react";
 import { FeatureFileListSection } from "./qa/feature-file-list-section";
 import { FeatureImportPanel } from "./qa/feature-import-panel";
+import { FeatureDeletePopup } from "./qa/feature-delete-popup";
+import { QaPageShell } from "./qa/qa-page-shell";
 import { useFeatureFiles } from "../hooks/use-feature-files";
-import { Popup } from "./ui/popup";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -237,64 +238,51 @@ export default function QaDashboard() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#070b14] px-4 py-8 text-slate-100 sm:px-8">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-28 top-[-120px] h-[280px] w-[280px] rounded-full bg-cyan-400/20 blur-3xl" />
-        <div className="absolute -right-24 top-[120px] h-[240px] w-[240px] rounded-full bg-emerald-300/15 blur-3xl" />
-        <div className="absolute bottom-[-100px] left-1/3 h-[220px] w-[360px] rounded-full bg-blue-500/10 blur-3xl" />
-      </div>
+    <QaPageShell includeBottomGlow>
+      <h1 className="font-brand text-[38px] font-semibold tracking-[0.25em] text-transparent [text-shadow:0_0_34px_rgba(99,235,255,0.28)] bg-[linear-gradient(110deg,#dcf8ff_0%,#99ecff_38%,#8de5ff_62%,#f8fdff_100%)] bg-clip-text sm:text-[48px]">
+        SNIFF
+      </h1>
 
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-5">
-        <h1 className="font-brand text-[38px] font-semibold tracking-[0.25em] text-transparent [text-shadow:0_0_34px_rgba(99,235,255,0.28)] bg-[linear-gradient(110deg,#dcf8ff_0%,#99ecff_38%,#8de5ff_62%,#f8fdff_100%)] bg-clip-text sm:text-[48px]">
-          SNIFF
-        </h1>
+      <FeatureImportPanel
+        isDragActive={isDragActive}
+        rawText={rawText}
+        onRawTextChange={setRawText}
+        onFileInput={onFileInput}
+        onParseTextarea={onParseTextarea}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+      />
 
-        <FeatureImportPanel
-          isDragActive={isDragActive}
-          rawText={rawText}
-          onRawTextChange={setRawText}
-          onFileInput={onFileInput}
-          onParseTextarea={onParseTextarea}
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-        />
+      {notice ? (
+        <section
+          className={`rounded-2xl border px-4 py-3 text-sm backdrop-blur ${
+            notice.type === "success"
+              ? "border-emerald-300/35 bg-emerald-300/10 text-emerald-100"
+              : "border-rose-300/35 bg-rose-300/10 text-rose-100"
+          }`}
+        >
+          {notice.message}
+        </section>
+      ) : null}
 
-        {notice ? (
-          <section
-            className={`rounded-2xl border px-4 py-3 text-sm backdrop-blur ${
-              notice.type === "success"
-                ? "border-emerald-300/35 bg-emerald-300/10 text-emerald-100"
-                : "border-rose-300/35 bg-rose-300/10 text-rose-100"
-            }`}
-          >
-            {notice.message}
-          </section>
-        ) : null}
+      <FeatureFileListSection
+        query={query}
+        onQueryChange={onQueryChange}
+        pagedItems={pagedItems}
+        totalItems={filtered.length}
+        currentPage={activePage}
+        totalPages={totalPages}
+        onPrevPage={onPrevPage}
+        onNextPage={onNextPage}
+        onDelete={onDelete}
+      />
 
-        <FeatureFileListSection
-          query={query}
-          onQueryChange={onQueryChange}
-          pagedItems={pagedItems}
-          totalItems={filtered.length}
-          currentPage={activePage}
-          totalPages={totalPages}
-          onPrevPage={onPrevPage}
-          onNextPage={onNextPage}
-          onDelete={onDelete}
-        />
-
-        <Popup
-          open={Boolean(pendingDeleteId)}
-          title="Feature 파일을 삭제할까요?"
-          description="삭제 후에는 복구할 수 없습니다."
-          confirmLabel="삭제"
-          cancelLabel="취소"
-          tone="danger"
-          onClose={() => setPendingDeleteId(null)}
-          onConfirm={onConfirmDelete}
-        />
-      </div>
-    </div>
+      <FeatureDeletePopup
+        open={Boolean(pendingDeleteId)}
+        onClose={() => setPendingDeleteId(null)}
+        onConfirm={onConfirmDelete}
+      />
+    </QaPageShell>
   );
 }
