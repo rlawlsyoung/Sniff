@@ -18,6 +18,7 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
   const router = useRouter();
   const {
     isHydrated,
+    syncError,
     featureFileMap,
     addTester,
     updateTester,
@@ -74,6 +75,12 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
   return (
     <>
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
+        {syncError ? (
+          <section className="rounded-2xl border border-rose-300/35 bg-rose-300/10 px-4 py-3 text-sm text-rose-100 backdrop-blur">
+            {syncError}
+          </section>
+        ) : null}
+
         <FeatureDetailHeaderSection
           fileName={featureFile.fileName}
           featureNames={featureFile.featureNames}

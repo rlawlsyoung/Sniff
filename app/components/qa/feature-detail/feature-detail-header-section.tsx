@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { FeatureDeletePopup } from "../feature-delete-popup";
-import { ChipButton, chipButtonClassName } from "../../ui/chip-button";
+import { ChipButton } from "../../ui/chip-button";
 
 type FeatureDetailHeaderSectionProps = {
   fileName: string;

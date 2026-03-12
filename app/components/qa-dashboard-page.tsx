@@ -28,8 +28,13 @@ function isFeatureLikeText(text: string) {
 }
 
 export default function QaDashboardPage() {
-  const { featureFiles, importFeatureText, removeFeatureFile } =
-    useFeatureFiles();
+  const {
+    featureFiles,
+    syncError,
+    refreshFeatureFiles,
+    importFeatureText,
+    removeFeatureFile,
+  } = useFeatureFiles();
   const [rawText, setRawText] = useState("");
   const [query, setQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -258,6 +263,23 @@ export default function QaDashboardPage() {
           }`}
         >
           {notice.message}
+        </section>
+      ) : null}
+
+      {syncError ? (
+        <section className="rounded-2xl border border-rose-300/35 bg-rose-300/10 px-4 py-3 text-sm text-rose-100 backdrop-blur">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p>{syncError}</p>
+            <button
+              type="button"
+              className="rounded-full border border-rose-200/50 bg-rose-200/15 px-3 py-1 text-xs font-semibold text-rose-50 transition hover:bg-rose-200/25"
+              onClick={() => {
+                void refreshFeatureFiles();
+              }}
+            >
+              다시 불러오기
+            </button>
+          </div>
         </section>
       ) : null}
 

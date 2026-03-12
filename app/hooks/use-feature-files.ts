@@ -1,344 +1,211 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createId,
+  getScenarioStatusByTesterResults,
   parseFeatureText,
   QaFeatureFile,
-  QaScenario,
   QaTester,
   ScenarioStatus,
   TesterScenarioResult,
-  getScenarioStatusByTesterResults,
 } from "../lib/gherkin";
+import {
+  createFeatureFile,
+  createManualFileName,
+  ImportResult,
+  normalizeFeatureFile,
+  sortFeatureFiles,
+  TesterDraft,
+} from "../lib/feature-files";
 
-const STORAGE_KEY = "sniff.qa.features.v1";
-const LEGACY_STORAGE_KEY = "sniff.qa.scenarios.v1";
+const SYNC_DEBOUNCE_MS = 450;
 
-type ImportResult =
-  | {
-      ok: true;
-      mode: "created" | "updated";
-      scenarioCount: number;
-      featureCount: number;
-      fileId: string;
-    }
-  | {
-      ok: false;
-      message: string;
-    };
-
-type GroupedScenario = {
-  source: string;
-  scenarios: QaScenario[];
+type FeatureFilesResponse = {
+  featureFiles: QaFeatureFile[];
 };
 
-type TesterDraft = {
-  name: string;
-  device: string;
-  osVersion: string;
+type UpsertFeatureFileResponse = {
+  featureFile: QaFeatureFile;
 };
 
-function toScenarioStatus(value: unknown): ScenarioStatus {
-  if (value === "passed" || value === "failed" || value === "todo") {
-    return value;
+function replaceFeatureFile(
+  previous: QaFeatureFile[],
+  nextFile: QaFeatureFile,
+  previousId?: string,
+) {
+  const targetIndex = previous.findIndex(
+    (item) =>
+      item.id === nextFile.id ||
+      (previousId ? item.id === previousId : false) ||
+      item.fileName === nextFile.fileName,
+  );
+
+  if (targetIndex === -1) {
+    return sortFeatureFiles([nextFile, ...previous]);
   }
 
-  return "todo";
+  const next = [...previous];
+  next[targetIndex] = nextFile;
+  return sortFeatureFiles(next);
 }
 
-function normalizeTester(value: unknown): QaTester | null {
-  if (!value || typeof value !== "object") {
-    return null;
-  }
-
-  const candidate = value as Partial<QaTester>;
-  const now = new Date().toISOString();
-  const name = candidate.name?.trim();
-
-  if (!name) {
-    return null;
-  }
-
-  return {
-    id:
-      typeof candidate.id === "string" && candidate.id
-        ? candidate.id
-        : createId(),
-    name,
-    device: typeof candidate.device === "string" ? candidate.device.trim() : "",
-    osVersion:
-      typeof candidate.osVersion === "string" ? candidate.osVersion.trim() : "",
-    createdAt:
-      typeof candidate.createdAt === "string" && candidate.createdAt
-        ? candidate.createdAt
-        : now,
-    updatedAt:
-      typeof candidate.updatedAt === "string" && candidate.updatedAt
-        ? candidate.updatedAt
-        : now,
-  };
-}
-
-function normalizeTesterResults(
-  value: unknown,
-): Record<string, TesterScenarioResult> {
-  if (!value || typeof value !== "object") {
-    return {};
-  }
-
-  const entries = Object.entries(value as Record<string, unknown>);
-  const normalized: Record<string, TesterScenarioResult> = {};
-
-  for (const [testerId, result] of entries) {
-    if (!testerId || !result || typeof result !== "object") {
-      continue;
-    }
-
-    const candidate = result as Partial<TesterScenarioResult>;
-    normalized[testerId] = {
-      status: toScenarioStatus(candidate.status),
-      note: typeof candidate.note === "string" ? candidate.note : "",
-      updatedAt:
-        typeof candidate.updatedAt === "string" && candidate.updatedAt
-          ? candidate.updatedAt
-          : new Date().toISOString(),
-    };
-  }
-
-  return normalized;
-}
-
-function normalizeScenario(value: unknown): QaScenario | null {
-  if (!value || typeof value !== "object") {
-    return null;
-  }
-
-  const candidate = value as Partial<QaScenario>;
-  const now = new Date().toISOString();
-
-  return {
-    id:
-      typeof candidate.id === "string" && candidate.id
-        ? candidate.id
-        : createId(),
-    feature:
-      typeof candidate.feature === "string" && candidate.feature.trim()
-        ? candidate.feature
-        : "Untitled Feature",
-    title:
-      typeof candidate.title === "string" && candidate.title.trim()
-        ? candidate.title
-        : "Untitled Scenario",
-    tags: Array.isArray(candidate.tags)
-      ? candidate.tags.filter((tag): tag is string => typeof tag === "string")
-      : [],
-    steps: Array.isArray(candidate.steps)
-      ? candidate.steps.filter(
-          (step): step is string => typeof step === "string",
-        )
-      : [],
-    source:
-      typeof candidate.source === "string" && candidate.source
-        ? candidate.source
-        : "legacy-import.feature",
-    status: toScenarioStatus(candidate.status),
-    note: typeof candidate.note === "string" ? candidate.note : "",
-    testerResults: normalizeTesterResults(candidate.testerResults),
-    createdAt:
-      typeof candidate.createdAt === "string" && candidate.createdAt
-        ? candidate.createdAt
-        : now,
-  };
-}
-
-function normalizeFeatureFile(value: unknown): QaFeatureFile | null {
-  if (!value || typeof value !== "object") {
-    return null;
-  }
-
-  const candidate = value as Partial<QaFeatureFile>;
-  const scenarios = Array.isArray(candidate.scenarios)
-    ? candidate.scenarios
-        .map((scenario) => normalizeScenario(scenario))
-        .filter((scenario): scenario is QaScenario => Boolean(scenario))
-    : [];
-  const testers = Array.isArray(candidate.testers)
-    ? candidate.testers
-        .map((tester) => normalizeTester(tester))
-        .filter((tester): tester is QaTester => Boolean(tester))
-    : [];
-
-  const now = new Date().toISOString();
-  const normalizedScenarios = scenarios.map((scenario) => ({
-    ...scenario,
-    status: getScenarioStatusByTesterResults(scenario, testers),
-  }));
-  const scenarioFeatureNames = normalizedScenarios.map((item) => item.feature);
-
-  return {
-    id:
-      typeof candidate.id === "string" && candidate.id
-        ? candidate.id
-        : createId(),
-    fileName:
-      typeof candidate.fileName === "string" && candidate.fileName.trim()
-        ? candidate.fileName
-        : "legacy-import.feature",
-    featureNames:
-      Array.isArray(candidate.featureNames) && candidate.featureNames.length > 0
-        ? candidate.featureNames.filter(
-            (name): name is string =>
-              typeof name === "string" && name.trim().length > 0,
-          )
-        : Array.from(new Set(scenarioFeatureNames)),
-    scenarios: normalizedScenarios,
-    testers,
-    createdAt:
-      typeof candidate.createdAt === "string" && candidate.createdAt
-        ? candidate.createdAt
-        : now,
-    updatedAt:
-      typeof candidate.updatedAt === "string" && candidate.updatedAt
-        ? candidate.updatedAt
-        : now,
-  };
-}
-
-function createFeatureFile(params: {
-  id?: string;
-  fileName: string;
-  scenarios: QaScenario[];
-  featureNames?: string[];
-  testers?: QaTester[];
-  createdAt?: string;
-}): QaFeatureFile {
-  const now = new Date().toISOString();
-  const scenarioFeatureNames = params.scenarios.map((item) => item.feature);
-  const featureNames =
-    params.featureNames && params.featureNames.length > 0
-      ? params.featureNames
-      : Array.from(new Set(scenarioFeatureNames));
-
-  return {
-    id: params.id ?? createId(),
-    fileName: params.fileName,
-    featureNames,
-    scenarios: params.scenarios.map((scenario) => ({
-      ...scenario,
-      testerResults: scenario.testerResults ?? {},
-      status: getScenarioStatusByTesterResults(scenario, params.testers ?? []),
-    })),
-    testers: params.testers ?? [],
-    createdAt: params.createdAt ?? now,
-    updatedAt: now,
-  };
-}
-
-function groupScenariosBySource(scenarios: QaScenario[]): GroupedScenario[] {
-  const groups = new Map<string, QaScenario[]>();
-
-  for (const scenario of scenarios) {
-    const source = scenario.source || "legacy-import.feature";
-    const current = groups.get(source);
-    if (current) {
-      current.push(scenario);
-      continue;
-    }
-
-    groups.set(source, [scenario]);
-  }
-
-  return Array.from(groups.entries()).map(([source, grouped]) => ({
-    source,
-    scenarios: grouped,
-  }));
-}
-
-function loadLegacyFeatureFiles(): QaFeatureFile[] {
-  const raw = localStorage.getItem(LEGACY_STORAGE_KEY);
-  if (!raw) {
-    return [];
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as QaScenario[];
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    const grouped = groupScenariosBySource(parsed);
-
-    return grouped.map((group) =>
-      createFeatureFile({
-        fileName: group.source,
-        scenarios: group.scenarios,
-        testers: [],
-      }),
-    );
-  } catch {
-    return [];
-  }
-}
-
-function loadFeatureFiles(): QaFeatureFile[] {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw) {
-    try {
-      const parsed = JSON.parse(raw) as QaFeatureFile[];
-      if (Array.isArray(parsed)) {
-        return parsed
-          .map((item) => normalizeFeatureFile(item))
-          .filter((item): item is QaFeatureFile => Boolean(item));
-      }
-    } catch {
-      return [];
-    }
-  }
-
-  return loadLegacyFeatureFiles();
-}
-
-function createManualFileName() {
-  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-  return `manual-${stamp}.feature`;
-}
-
-function subscribeHydration() {
-  return () => {};
-}
-
-function getHydratedSnapshot() {
-  return true;
-}
-
-function getServerHydrationSnapshot() {
-  return false;
+async function parseResponseJson<T>(response: Response): Promise<T> {
+  return (await response.json()) as T;
 }
 
 export function useFeatureFiles() {
-  const isHydrated = useSyncExternalStore(
-    subscribeHydration,
-    getHydratedSnapshot,
-    getServerHydrationSnapshot,
-  );
-  const [featureFiles, setFeatureFiles] = useState<QaFeatureFile[]>(() =>
-    loadFeatureFiles(),
+  const [featureFiles, setFeatureFiles] = useState<QaFeatureFile[]>([]);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+
+  const featureFilesRef = useRef<QaFeatureFile[]>([]);
+  const syncTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map(),
   );
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(featureFiles));
+    featureFilesRef.current = featureFiles;
   }, [featureFiles]);
+
+  const refreshFeatureFiles = useCallback(async () => {
+    try {
+      const response = await fetch("/api/feature-files", {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        throw new Error("load-failed");
+      }
+
+      const payload = await parseResponseJson<FeatureFilesResponse>(response);
+      const normalized = Array.isArray(payload.featureFiles)
+        ? payload.featureFiles
+            .map((item) => normalizeFeatureFile(item))
+            .filter((item): item is QaFeatureFile => Boolean(item))
+        : [];
+
+      setFeatureFiles(sortFeatureFiles(normalized));
+      setSyncError(null);
+    } catch {
+      setSyncError(
+        "서버에서 데이터를 불러오지 못했습니다. 네트워크 연결과 서버 상태를 확인해주세요.",
+      );
+    } finally {
+      setIsHydrated(true);
+    }
+  }, []);
+
+  const flushFeatureFileSync = useCallback(async (fileId: string) => {
+    const target = featureFilesRef.current.find((item) => item.id === fileId);
+    if (!target) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/feature-files/${encodeURIComponent(fileId)}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            featureFile: target,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("sync-failed");
+      }
+
+      const payload =
+        await parseResponseJson<UpsertFeatureFileResponse>(response);
+      const saved = normalizeFeatureFile(payload.featureFile);
+      if (!saved) {
+        throw new Error("invalid-sync-response");
+      }
+
+      setFeatureFiles((previous) =>
+        replaceFeatureFile(previous, saved, fileId),
+      );
+      setSyncError(null);
+    } catch {
+      setSyncError(
+        "변경사항을 서버에 저장하지 못했습니다. 잠시 후 다시 시도해주세요.",
+      );
+    }
+  }, []);
+
+  const scheduleFeatureFileSync = useCallback(
+    (fileId: string) => {
+      const existingTimer = syncTimersRef.current.get(fileId);
+      if (existingTimer) {
+        clearTimeout(existingTimer);
+      }
+
+      const timer = setTimeout(() => {
+        syncTimersRef.current.delete(fileId);
+        void flushFeatureFileSync(fileId);
+      }, SYNC_DEBOUNCE_MS);
+
+      syncTimersRef.current.set(fileId, timer);
+    },
+    [flushFeatureFileSync],
+  );
+
+  const cancelFeatureFileSync = useCallback((fileId: string) => {
+    const timer = syncTimersRef.current.get(fileId);
+    if (!timer) {
+      return;
+    }
+
+    clearTimeout(timer);
+    syncTimersRef.current.delete(fileId);
+  }, []);
+
+  useEffect(() => {
+    void refreshFeatureFiles();
+
+    const timers = syncTimersRef.current;
+
+    return () => {
+      for (const timer of timers.values()) {
+        clearTimeout(timer);
+      }
+      timers.clear();
+    };
+  }, [refreshFeatureFiles]);
+
+  const applyFeatureFileMutation = useCallback(
+    (fileId: string, mutate: (file: QaFeatureFile) => QaFeatureFile | null) => {
+      let shouldSync = false;
+
+      setFeatureFiles((previous) => {
+        const next = previous.map((file) => {
+          if (file.id !== fileId) {
+            return file;
+          }
+
+          const updated = mutate(file);
+          if (!updated) {
+            return file;
+          }
+
+          shouldSync = true;
+          return updated;
+        });
+
+        return shouldSync ? sortFeatureFiles(next) : previous;
+      });
+
+      if (shouldSync) {
+        scheduleFeatureFileSync(fileId);
+      }
+    },
+    [scheduleFeatureFileSync],
+  );
 
   const importFeatureText = useCallback(
     (inputText: string, source?: string): ImportResult => {
@@ -358,9 +225,14 @@ export function useFeatureFiles() {
         scenarios: parsed.scenarios,
         featureNames: parsed.featureNames,
       });
-      const existing = featureFiles.find((item) => item.fileName === fileName);
-      const mode = existing ? "updated" : "created";
-      const fileId = existing ? existing.id : newFile.id;
+
+      let result: ImportResult = {
+        ok: true,
+        mode: "created",
+        scenarioCount: parsed.scenarios.length,
+        featureCount: parsed.featureCount || 1,
+        fileId: newFile.id,
+      };
 
       setFeatureFiles((previous) => {
         const existingIndex = previous.findIndex(
@@ -368,7 +240,15 @@ export function useFeatureFiles() {
         );
 
         if (existingIndex === -1) {
-          return [newFile, ...previous];
+          result = {
+            ok: true,
+            mode: "created",
+            scenarioCount: parsed.scenarios.length,
+            featureCount: parsed.featureCount || 1,
+            fileId: newFile.id,
+          };
+
+          return sortFeatureFiles([newFile, ...previous]);
         }
 
         const existing = previous[existingIndex];
@@ -381,108 +261,120 @@ export function useFeatureFiles() {
           createdAt: existing.createdAt,
         });
 
-        return previous.map((item, index) =>
-          index === existingIndex ? updated : item,
+        result = {
+          ok: true,
+          mode: "updated",
+          scenarioCount: parsed.scenarios.length,
+          featureCount: parsed.featureCount || 1,
+          fileId: existing.id,
+        };
+
+        return sortFeatureFiles(
+          previous.map((item, index) =>
+            index === existingIndex ? updated : item,
+          ),
         );
       });
 
-      return {
-        ok: true,
-        mode,
-        scenarioCount: parsed.scenarios.length,
-        featureCount: parsed.featureCount || 1,
-        fileId,
-      };
+      if (result.ok) {
+        scheduleFeatureFileSync(result.fileId);
+      }
+
+      return result;
     },
-    [featureFiles],
+    [scheduleFeatureFileSync],
   );
 
   const updateScenarioStatus = useCallback(
     (fileId: string, scenarioId: string, status: ScenarioStatus) => {
-      setFeatureFiles((previous) =>
-        previous.map((file) => {
-          if (file.id !== fileId) {
-            return file;
-          }
-
-          const updatedScenarios = file.scenarios.map((scenario) =>
-            scenario.id === scenarioId
-              ? {
-                  ...scenario,
-                  status,
-                }
-              : scenario,
-          );
-
-          return {
-            ...file,
-            scenarios: updatedScenarios,
-            updatedAt: new Date().toISOString(),
-          };
-        }),
-      );
+      applyFeatureFileMutation(fileId, (file) => ({
+        ...file,
+        scenarios: file.scenarios.map((scenario) =>
+          scenario.id === scenarioId
+            ? {
+                ...scenario,
+                status,
+              }
+            : scenario,
+        ),
+        updatedAt: new Date().toISOString(),
+      }));
     },
-    [],
+    [applyFeatureFileMutation],
   );
 
   const updateScenarioNote = useCallback(
     (fileId: string, scenarioId: string, note: string) => {
-      setFeatureFiles((previous) =>
-        previous.map((file) => {
-          if (file.id !== fileId) {
-            return file;
-          }
-
-          const updatedScenarios = file.scenarios.map((scenario) =>
-            scenario.id === scenarioId
-              ? {
-                  ...scenario,
-                  note,
-                }
-              : scenario,
-          );
-
-          return {
-            ...file,
-            scenarios: updatedScenarios,
-            updatedAt: new Date().toISOString(),
-          };
-        }),
-      );
+      applyFeatureFileMutation(fileId, (file) => ({
+        ...file,
+        scenarios: file.scenarios.map((scenario) =>
+          scenario.id === scenarioId
+            ? {
+                ...scenario,
+                note,
+              }
+            : scenario,
+        ),
+        updatedAt: new Date().toISOString(),
+      }));
     },
-    [],
+    [applyFeatureFileMutation],
   );
 
-  const removeFeatureFile = useCallback((fileId: string) => {
-    setFeatureFiles((previous) =>
-      previous.filter((item) => item.id !== fileId),
-    );
-  }, []);
+  const removeFeatureFile = useCallback(
+    (fileId: string) => {
+      cancelFeatureFileSync(fileId);
 
-  const addTester = useCallback((fileId: string, draft: TesterDraft) => {
-    const trimmedName = draft.name.trim();
-    if (!trimmedName) {
-      return;
-    }
+      setFeatureFiles((previous) =>
+        previous.filter((item) => item.id !== fileId),
+      );
 
-    const now = new Date().toISOString();
-    const tester: QaTester = {
-      id: createId(),
-      name: trimmedName,
-      device: draft.device.trim(),
-      osVersion: draft.osVersion.trim(),
-      createdAt: now,
-      updatedAt: now,
-    };
+      void (async () => {
+        try {
+          const response = await fetch(
+            `/api/feature-files/${encodeURIComponent(fileId)}`,
+            {
+              method: "DELETE",
+            },
+          );
 
-    setFeatureFiles((previous) =>
-      previous.map((file) => {
-        if (file.id !== fileId) {
-          return file;
+          if (!response.ok && response.status !== 404) {
+            throw new Error("delete-failed");
+          }
+
+          setSyncError(null);
+        } catch {
+          setSyncError(
+            "Feature 삭제를 서버에 반영하지 못했습니다. 목록을 다시 불러옵니다.",
+          );
+          await refreshFeatureFiles();
         }
+      })();
+    },
+    [cancelFeatureFileSync, refreshFeatureFiles],
+  );
 
+  const addTester = useCallback(
+    (fileId: string, draft: TesterDraft) => {
+      const trimmedName = draft.name.trim();
+      if (!trimmedName) {
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const tester: QaTester = {
+        id: createId(),
+        name: trimmedName,
+        device: draft.device.trim(),
+        osVersion: draft.osVersion.trim(),
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      applyFeatureFileMutation(fileId, (file) => {
         const nextTesters = [...file.testers, tester];
         const shouldSeedLegacyValues = file.testers.length === 0;
+
         const updatedScenarios = file.scenarios.map((scenario) => {
           const seededResult: TesterScenarioResult = shouldSeedLegacyValues
             ? {
@@ -517,9 +409,10 @@ export function useFeatureFiles() {
           scenarios: updatedScenarios,
           updatedAt: now,
         };
-      }),
-    );
-  }, []);
+      });
+    },
+    [applyFeatureFileMutation],
+  );
 
   const updateTester = useCallback(
     (fileId: string, testerId: string, draft: TesterDraft) => {
@@ -530,47 +423,34 @@ export function useFeatureFiles() {
 
       const now = new Date().toISOString();
 
-      setFeatureFiles((previous) =>
-        previous.map((file) => {
-          if (file.id !== fileId) {
-            return file;
-          }
-
-          const updatedTesters = file.testers.map((tester) =>
-            tester.id === testerId
-              ? {
-                  ...tester,
-                  name: trimmedName,
-                  device: draft.device.trim(),
-                  osVersion: draft.osVersion.trim(),
-                  updatedAt: now,
-                }
-              : tester,
-          );
-
-          return {
-            ...file,
-            testers: updatedTesters,
-            updatedAt: now,
-          };
-        }),
-      );
+      applyFeatureFileMutation(fileId, (file) => ({
+        ...file,
+        testers: file.testers.map((tester) =>
+          tester.id === testerId
+            ? {
+                ...tester,
+                name: trimmedName,
+                device: draft.device.trim(),
+                osVersion: draft.osVersion.trim(),
+                updatedAt: now,
+              }
+            : tester,
+        ),
+        updatedAt: now,
+      }));
     },
-    [],
+    [applyFeatureFileMutation],
   );
 
-  const removeTester = useCallback((fileId: string, testerId: string) => {
-    const now = new Date().toISOString();
+  const removeTester = useCallback(
+    (fileId: string, testerId: string) => {
+      const now = new Date().toISOString();
 
-    setFeatureFiles((previous) =>
-      previous.map((file) => {
-        if (file.id !== fileId) {
-          return file;
-        }
-
+      applyFeatureFileMutation(fileId, (file) => {
         const nextTesters = file.testers.filter(
           (tester) => tester.id !== testerId,
         );
+
         const updatedScenarios = file.scenarios.map((scenario) => {
           const testerResults = { ...scenario.testerResults };
           delete testerResults[testerId];
@@ -591,9 +471,10 @@ export function useFeatureFiles() {
           scenarios: updatedScenarios,
           updatedAt: now,
         };
-      }),
-    );
-  }, []);
+      });
+    },
+    [applyFeatureFileMutation],
+  );
 
   const updateScenarioTesterResult = useCallback(
     (
@@ -604,58 +485,76 @@ export function useFeatureFiles() {
     ) => {
       const now = new Date().toISOString();
 
-      setFeatureFiles((previous) =>
-        previous.map((file) => {
-          if (file.id !== fileId) {
-            return file;
+      applyFeatureFileMutation(fileId, (file) => {
+        const updatedScenarios = file.scenarios.map((scenario) => {
+          if (scenario.id !== scenarioId) {
+            return scenario;
           }
 
-          const updatedScenarios = file.scenarios.map((scenario) => {
-            if (scenario.id !== scenarioId) {
-              return scenario;
-            }
-
-            const currentResult = scenario.testerResults[testerId] ?? {
-              status: "todo",
-              note: "",
-              updatedAt: now,
-            };
-
-            const nextResult: TesterScenarioResult = {
-              status: updates.status ?? currentResult.status,
-              note: updates.note ?? currentResult.note,
-              updatedAt: now,
-            };
-
-            const testerResults = {
-              ...scenario.testerResults,
-              [testerId]: nextResult,
-            };
-
-            return {
-              ...scenario,
-              testerResults,
-              status: getScenarioStatusByTesterResults(
-                { ...scenario, testerResults },
-                file.testers,
-              ),
-            };
-          });
-
-          return {
-            ...file,
-            scenarios: updatedScenarios,
+          const currentResult = scenario.testerResults[testerId] ?? {
+            status: "todo",
+            note: "",
             updatedAt: now,
           };
-        }),
-      );
+
+          const nextResult: TesterScenarioResult = {
+            status: updates.status ?? currentResult.status,
+            note: updates.note ?? currentResult.note,
+            updatedAt: now,
+          };
+
+          const testerResults = {
+            ...scenario.testerResults,
+            [testerId]: nextResult,
+          };
+
+          return {
+            ...scenario,
+            testerResults,
+            status: getScenarioStatusByTesterResults(
+              { ...scenario, testerResults },
+              file.testers,
+            ),
+          };
+        });
+
+        return {
+          ...file,
+          scenarios: updatedScenarios,
+          updatedAt: now,
+        };
+      });
     },
-    [],
+    [applyFeatureFileMutation],
   );
 
   const clearFeatureFiles = useCallback(() => {
+    for (const timer of syncTimersRef.current.values()) {
+      clearTimeout(timer);
+    }
+    syncTimersRef.current.clear();
+
     setFeatureFiles([]);
-  }, []);
+
+    void (async () => {
+      try {
+        const response = await fetch("/api/feature-files", {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          throw new Error("clear-failed");
+        }
+
+        setSyncError(null);
+      } catch {
+        setSyncError(
+          "전체 삭제를 서버에 반영하지 못했습니다. 다시 불러옵니다.",
+        );
+        await refreshFeatureFiles();
+      }
+    })();
+  }, [refreshFeatureFiles]);
 
   const visibleFeatureFiles = useMemo(() => {
     return isHydrated ? featureFiles : [];
@@ -667,8 +566,10 @@ export function useFeatureFiles() {
 
   return {
     isHydrated,
+    syncError,
     featureFiles: visibleFeatureFiles,
     featureFileMap,
+    refreshFeatureFiles,
     importFeatureText,
     updateScenarioStatus,
     updateScenarioNote,
