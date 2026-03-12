@@ -33,8 +33,6 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
   const router = useRouter();
   const {
     featureFileMap,
-    updateScenarioStatus,
-    updateScenarioNote,
     addTester,
     updateTester,
     removeTester,
@@ -190,7 +188,7 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
   };
 
   const onTesterEditClick = (testerId: string) => {
-    const tester = featureFile.testers.find((item) => item.id === testerId);
+    const tester = featureFile?.testers.find((item) => item.id === testerId);
     if (!tester) {
       return;
     }
@@ -551,12 +549,6 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
                 key={scenario.id}
                 scenario={scenario}
                 testers={featureFile.testers}
-                onStatusChange={(scenarioId, status) =>
-                  updateScenarioStatus(featureFile.id, scenarioId, status)
-                }
-                onNoteChange={(scenarioId, note) =>
-                  updateScenarioNote(featureFile.id, scenarioId, note)
-                }
                 onTesterResultChange={(scenarioId, testerId, updates) =>
                   updateScenarioTesterResult(
                     featureFile.id,
