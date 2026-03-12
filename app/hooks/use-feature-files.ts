@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import {
   createId,
   parseFeatureText,
@@ -308,7 +314,24 @@ function createManualFileName() {
   return `manual-${stamp}.feature`;
 }
 
+function subscribeHydration() {
+  return () => {};
+}
+
+function getHydratedSnapshot() {
+  return true;
+}
+
+function getServerHydrationSnapshot() {
+  return false;
+}
+
 export function useFeatureFiles() {
+  const isHydrated = useSyncExternalStore(
+    subscribeHydration,
+    getHydratedSnapshot,
+    getServerHydrationSnapshot,
+  );
   const [featureFiles, setFeatureFiles] = useState<QaFeatureFile[]>(() =>
     loadFeatureFiles(),
   );
@@ -634,12 +657,17 @@ export function useFeatureFiles() {
     setFeatureFiles([]);
   }, []);
 
+  const visibleFeatureFiles = useMemo(() => {
+    return isHydrated ? featureFiles : [];
+  }, [featureFiles, isHydrated]);
+
   const featureFileMap = useMemo(() => {
-    return new Map(featureFiles.map((item) => [item.id, item]));
-  }, [featureFiles]);
+    return new Map(visibleFeatureFiles.map((item) => [item.id, item]));
+  }, [visibleFeatureFiles]);
 
   return {
-    featureFiles,
+    isHydrated,
+    featureFiles: visibleFeatureFiles,
     featureFileMap,
     importFeatureText,
     updateScenarioStatus,

@@ -17,6 +17,7 @@ type FeatureDetailPageProps = {
 export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
   const router = useRouter();
   const {
+    isHydrated,
     featureFileMap,
     addTester,
     updateTester,
@@ -42,6 +43,16 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
     },
     [featureId, updateScenarioTesterResult],
   );
+
+  if (!isHydrated) {
+    return (
+      <QaPageShell maxWidthClassName="max-w-4xl" contentGapClassName="gap-4">
+        <div className="rounded-2xl border border-white/15 bg-white/3 p-8 text-center text-sm text-slate-300">
+          Feature 데이터를 불러오는 중입니다...
+        </div>
+      </QaPageShell>
+    );
+  }
 
   if (!featureFile) {
     return (
