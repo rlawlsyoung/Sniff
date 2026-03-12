@@ -214,14 +214,9 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
         <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_14px_32px_rgba(0,0,0,0.28)] backdrop-blur-xl">
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                  Quick Filter
-                </p>
-                <h2 className="mt-1 text-base font-semibold text-slate-100">
-                  시나리오 빠르게 찾기
-                </h2>
-              </div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                Quick Filter
+              </p>
 
               {hasActiveFilters ? (
                 <button
