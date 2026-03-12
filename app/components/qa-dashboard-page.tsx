@@ -11,7 +11,6 @@ import {
 import { FeatureFileListSection } from "./qa/feature-file-list-section";
 import { FeatureImportPanel } from "./qa/feature-import-panel";
 import { FeatureDeletePopup } from "./qa/feature-delete-popup";
-import { QaPageShell } from "./qa/qa-page-shell";
 import { useFeatureFiles } from "../hooks/use-feature-files";
 
 const ITEMS_PER_PAGE = 6;
@@ -238,11 +237,7 @@ export default function QaDashboardPage() {
   };
 
   return (
-    <QaPageShell includeBottomGlow>
-      <h1 className="font-brand text-[38px] font-semibold tracking-[0.25em] text-transparent [text-shadow:0_0_34px_rgba(99,235,255,0.28)] bg-[linear-gradient(110deg,#dcf8ff_0%,#99ecff_38%,#8de5ff_62%,#f8fdff_100%)] bg-clip-text sm:text-[48px]">
-        SNIFF
-      </h1>
-
+    <section className="flex w-full flex-col gap-5">
       <FeatureImportPanel
         isDragActive={isDragActive}
         rawText={rawText}
@@ -283,6 +278,6 @@ export default function QaDashboardPage() {
         onClose={() => setPendingDeleteId(null)}
         onConfirm={onConfirmDelete}
       />
-    </QaPageShell>
+    </section>
   );
 }
