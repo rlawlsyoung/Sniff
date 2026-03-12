@@ -22,10 +22,17 @@ export function FeatureDetailHeaderSection({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2">
-        <Link href="/" className={chipButtonClassName()}>
-          메인으로 돌아가기
-        </Link>
+      <section className="rounded-2xl border border-white/10 flex items-start justify-between bg-white/4 p-5 shadow-[0_14px_32px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+        <div>
+          <h1 className="text-2xl font-semibold text-white">{fileName}</h1>
+          <p className="mt-2 text-sm text-slate-300">
+            {featureNames.join(", ") || "Untitled Feature"}
+          </p>
+          <p className="mt-1 text-xs text-slate-400">
+            업데이트: {new Date(updatedAt).toLocaleString()}
+          </p>
+        </div>
+
         <ChipButton
           variant="danger"
           className="font-semibold"
@@ -33,16 +40,6 @@ export function FeatureDetailHeaderSection({
         >
           이 파일 삭제
         </ChipButton>
-      </div>
-
-      <section className="rounded-2xl border border-white/10 bg-white/4 p-5 shadow-[0_14px_32px_rgba(0,0,0,0.28)] backdrop-blur-xl">
-        <h1 className="text-2xl font-semibold text-white">{fileName}</h1>
-        <p className="mt-2 text-sm text-slate-300">
-          {featureNames.join(", ") || "Untitled Feature"}
-        </p>
-        <p className="mt-1 text-xs text-slate-400">
-          업데이트: {new Date(updatedAt).toLocaleString()}
-        </p>
       </section>
 
       <FeatureDeletePopup

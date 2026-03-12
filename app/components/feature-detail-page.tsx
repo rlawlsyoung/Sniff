@@ -8,7 +8,7 @@ import { useFeatureFiles } from "../hooks/use-feature-files";
 import { FeatureDetailHeaderSection } from "./qa/feature-detail/feature-detail-header-section";
 import { FeatureScenariosSection } from "./qa/feature-detail/feature-scenarios-section";
 import { FeatureTestersSection } from "./qa/feature-detail/feature-testers-section";
-import { chipButtonClassName } from "./ui/chip-button";
+import { ChipButton, chipButtonClassName } from "./ui/chip-button";
 
 type FeatureDetailPageProps = {
   featureId: string;
@@ -44,9 +44,13 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
     [featureId, updateScenarioTesterResult],
   );
 
+  const onScrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
   if (!isHydrated) {
     return (
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
         <div className="rounded-2xl border border-white/15 bg-white/3 p-8 text-center text-sm text-slate-300">
           Feature 데이터를 불러오는 중입니다...
         </div>
@@ -56,7 +60,7 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
 
   if (!featureFile) {
     return (
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
         <Link href="/" className={chipButtonClassName({ className: "w-fit" })}>
           메인으로 돌아가기
         </Link>
@@ -68,28 +72,51 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
-      <FeatureDetailHeaderSection
-        fileName={featureFile.fileName}
-        featureNames={featureFile.featureNames}
-        updatedAt={featureFile.updatedAt}
-        onDeleteFeature={onDeleteFeature}
-      />
+    <>
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
+        <FeatureDetailHeaderSection
+          fileName={featureFile.fileName}
+          featureNames={featureFile.featureNames}
+          updatedAt={featureFile.updatedAt}
+          onDeleteFeature={onDeleteFeature}
+        />
 
-      <FeatureScenariosSection
-        scenarios={featureFile.scenarios}
-        testers={featureFile.testers}
-        onTesterResultChange={onScenarioTesterResultChange}
-        middleContent={
-          <FeatureTestersSection
-            fileId={featureFile.id}
-            testers={featureFile.testers}
-            addTester={addTester}
-            updateTester={updateTester}
-            removeTester={removeTester}
-          />
-        }
-      />
-    </div>
+        <FeatureScenariosSection
+          scenarios={featureFile.scenarios}
+          testers={featureFile.testers}
+          onTesterResultChange={onScenarioTesterResultChange}
+          middleContent={
+            <FeatureTestersSection
+              fileId={featureFile.id}
+              testers={featureFile.testers}
+              addTester={addTester}
+              updateTester={updateTester}
+              removeTester={removeTester}
+            />
+          }
+        />
+      </div>
+
+      <ChipButton
+        variant="accent"
+        className="bottom-6 right-6 z-40 h-14! w-14! p-0! shadow-lg shadow-black/30 hidden xl:fixed"
+        onClick={onScrollToTop}
+        aria-label="페이지 최상단으로 이동"
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          className="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 5v14" />
+          <path d="m6 11 6-6 6 6" />
+        </svg>
+      </ChipButton>
+    </>
   );
 }
