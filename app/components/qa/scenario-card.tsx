@@ -355,37 +355,6 @@ export function ScenarioCard({
             등록된 진행자가 없어 QA를 진행할 수 없습니다. 먼저 상단에서 진행자를
             추가해주세요.
           </div>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            {(["todo", "passed", "failed"] as ScenarioStatus[]).map(
-              (status) => (
-                <button
-                  key={`${scenario.id}-${status}`}
-                  className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition ${
-                    scenario.status === status
-                      ? status === "todo"
-                        ? "border-slate-200/80 bg-slate-200 text-slate-900"
-                        : status === "passed"
-                          ? "border-emerald-300/80 bg-emerald-300 text-emerald-950"
-                          : "border-rose-300/80 bg-rose-300 text-rose-950"
-                      : STATUS_BUTTON_STYLES[status]
-                  } opacity-50 cursor-not-allowed`}
-                  disabled
-                  aria-disabled="true"
-                >
-                  {STATUS_LABELS[status]}
-                </button>
-              ),
-            )}
-          </div>
-
-          <textarea
-            className="mt-3 h-24 w-full resize-y rounded-xl border border-white/15 bg-black/35 p-3 text-sm text-slate-100 outline-none ring-cyan-300/25 placeholder:text-slate-500 opacity-60"
-            placeholder="진행자 등록 후 메모를 입력할 수 있습니다."
-            value={scenario.note}
-            disabled
-            readOnly
-          />
         </>
       ) : (
         <section className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-3.5">

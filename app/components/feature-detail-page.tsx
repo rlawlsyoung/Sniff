@@ -43,12 +43,18 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("all");
   const [featureFilter, setFeatureFilter] = useState<FeatureFilter>("all");
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
-  const [testerForm, setTesterForm] = useState(EMPTY_TESTER_FORM);
+  const [newTesterForm, setNewTesterForm] = useState(EMPTY_TESTER_FORM);
+  const [newTesterFormError, setNewTesterFormError] = useState<string | null>(
+    null,
+  );
   const [editingTesterId, setEditingTesterId] = useState<string | null>(null);
+  const [editingTesterForm, setEditingTesterForm] = useState(EMPTY_TESTER_FORM);
+  const [editingTesterFormError, setEditingTesterFormError] = useState<
+    string | null
+  >(null);
   const [pendingDeleteTesterId, setPendingDeleteTesterId] = useState<
     string | null
   >(null);
-  const [testerFormError, setTesterFormError] = useState<string | null>(null);
 
   const featureFile = featureFileMap.get(featureId);
   const stats = useMemo(() => {
@@ -166,25 +172,20 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
     router.push("/");
   };
 
-  const onTesterFormSubmit = () => {
+  const onTesterAdd = () => {
     if (!featureFile) {
       return;
     }
 
-    if (!testerForm.name.trim()) {
-      setTesterFormError("진행자 이름을 입력해주세요.");
+    if (!newTesterForm.name.trim()) {
+      setNewTesterFormError("진행자 이름을 입력해주세요.");
       return;
     }
 
-    if (editingTesterId) {
-      updateTester(featureFile.id, editingTesterId, testerForm);
-    } else {
-      addTester(featureFile.id, testerForm);
-    }
+    addTester(featureFile.id, newTesterForm);
 
-    setTesterForm(EMPTY_TESTER_FORM);
-    setTesterFormError(null);
-    setEditingTesterId(null);
+    setNewTesterForm(EMPTY_TESTER_FORM);
+    setNewTesterFormError(null);
   };
 
   const onTesterEditClick = (testerId: string) => {
@@ -194,18 +195,34 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
     }
 
     setEditingTesterId(tester.id);
-    setTesterForm({
+    setEditingTesterForm({
       name: tester.name,
       device: tester.device,
       osVersion: tester.osVersion,
     });
-    setTesterFormError(null);
+    setEditingTesterFormError(null);
+  };
+
+  const onTesterEditSave = () => {
+    if (!featureFile || !editingTesterId) {
+      return;
+    }
+
+    if (!editingTesterForm.name.trim()) {
+      setEditingTesterFormError("진행자 이름을 입력해주세요.");
+      return;
+    }
+
+    updateTester(featureFile.id, editingTesterId, editingTesterForm);
+    setEditingTesterId(null);
+    setEditingTesterForm(EMPTY_TESTER_FORM);
+    setEditingTesterFormError(null);
   };
 
   const onCancelTesterEdit = () => {
     setEditingTesterId(null);
-    setTesterForm(EMPTY_TESTER_FORM);
-    setTesterFormError(null);
+    setEditingTesterForm(EMPTY_TESTER_FORM);
+    setEditingTesterFormError(null);
   };
 
   const onConfirmTesterDelete = () => {
@@ -439,21 +456,24 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
             </span>
           </div>
 
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
             <input
               className="w-full rounded-xl border border-white/15 bg-black/35 px-3 py-2.5 text-sm text-slate-100 outline-none ring-cyan-300/20 placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-4"
               placeholder="진행자명 (예: 김QA)"
-              value={testerForm.name}
+              value={newTesterForm.name}
               onChange={(event) =>
-                setTesterForm((prev) => ({ ...prev, name: event.target.value }))
+                setNewTesterForm((prev) => ({
+                  ...prev,
+                  name: event.target.value,
+                }))
               }
             />
             <input
               className="w-full rounded-xl border border-white/15 bg-black/35 px-3 py-2.5 text-sm text-slate-100 outline-none ring-cyan-300/20 placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-4"
               placeholder="기기 정보 (예: iPhone 16 Pro)"
-              value={testerForm.device}
+              value={newTesterForm.device}
               onChange={(event) =>
-                setTesterForm((prev) => ({
+                setNewTesterForm((prev) => ({
                   ...prev,
                   device: event.target.value,
                 }))
@@ -462,36 +482,24 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
             <input
               className="w-full rounded-xl border border-white/15 bg-black/35 px-3 py-2.5 text-sm text-slate-100 outline-none ring-cyan-300/20 placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-4"
               placeholder="OS 버전 (예: iOS 19.0)"
-              value={testerForm.osVersion}
+              value={newTesterForm.osVersion}
               onChange={(event) =>
-                setTesterForm((prev) => ({
+                setNewTesterForm((prev) => ({
                   ...prev,
                   osVersion: event.target.value,
                 }))
               }
             />
-          </div>
-
-          <div className="mt-3 flex flex-wrap gap-2">
             <button
-              className="rounded-full border border-cyan-300/45 bg-cyan-300/12 px-4 py-1.5 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/20"
-              onClick={onTesterFormSubmit}
+              className="rounded-full border border-cyan-300/45 bg-cyan-300/12 px-4 py-1.5 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/20 md:self-center"
+              onClick={onTesterAdd}
             >
-              {editingTesterId ? "진행자 수정 저장" : "진행자 추가"}
+              진행자 추가
             </button>
-
-            {editingTesterId ? (
-              <button
-                className="rounded-full border border-white/20 bg-black/35 px-4 py-1.5 text-sm text-slate-200 transition hover:border-white/40"
-                onClick={onCancelTesterEdit}
-              >
-                수정 취소
-              </button>
-            ) : null}
           </div>
 
-          {testerFormError ? (
-            <p className="mt-2 text-xs text-rose-200">{testerFormError}</p>
+          {newTesterFormError ? (
+            <p className="mt-2 text-xs text-rose-200">{newTesterFormError}</p>
           ) : null}
 
           {featureFile.testers.length === 0 ? (
@@ -504,34 +512,98 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
               {featureFile.testers.map((tester) => (
                 <article
                   key={tester.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5"
+                  className="rounded-xl border border-white/10 bg-black/20 px-3 py-2.5"
                 >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-100">
-                      {tester.name}
-                    </p>
-                    <p className="truncate text-xs text-slate-400">
-                      {[
-                        tester.device || "기기 미입력",
-                        tester.osVersion || "OS 미입력",
-                      ].join(" / ")}
-                    </p>
-                  </div>
+                  {editingTesterId === tester.id ? (
+                    <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto]">
+                      <input
+                        className="w-full rounded-xl border border-white/15 bg-black/35 px-3 py-2.5 text-sm text-slate-100 outline-none ring-cyan-300/20 placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-4"
+                        placeholder="진행자명"
+                        value={editingTesterForm.name}
+                        onChange={(event) =>
+                          setEditingTesterForm((prev) => ({
+                            ...prev,
+                            name: event.target.value,
+                          }))
+                        }
+                      />
+                      <input
+                        className="w-full rounded-xl border border-white/15 bg-black/35 px-3 py-2.5 text-sm text-slate-100 outline-none ring-cyan-300/20 placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-4"
+                        placeholder="기기 정보"
+                        value={editingTesterForm.device}
+                        onChange={(event) =>
+                          setEditingTesterForm((prev) => ({
+                            ...prev,
+                            device: event.target.value,
+                          }))
+                        }
+                      />
+                      <input
+                        className="w-full rounded-xl border border-white/15 bg-black/35 px-3 py-2.5 text-sm text-slate-100 outline-none ring-cyan-300/20 placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-4"
+                        placeholder="OS 버전"
+                        value={editingTesterForm.osVersion}
+                        onChange={(event) =>
+                          setEditingTesterForm((prev) => ({
+                            ...prev,
+                            osVersion: event.target.value,
+                          }))
+                        }
+                      />
+                      <button
+                        className="rounded-full border border-cyan-300/45 bg-cyan-300/12 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-300/20 md:self-center"
+                        onClick={onTesterEditSave}
+                      >
+                        저장
+                      </button>
+                      <button
+                        className="rounded-full border border-white/20 bg-black/35 px-3 py-1.5 text-xs text-slate-200 transition hover:border-white/40 md:self-center"
+                        onClick={onCancelTesterEdit}
+                      >
+                        취소
+                      </button>
+                      <button
+                        className="rounded-full border border-rose-300/40 bg-rose-300/10 px-3 py-1.5 text-xs text-rose-100 transition hover:bg-rose-300/20 md:self-center"
+                        onClick={() => setPendingDeleteTesterId(tester.id)}
+                      >
+                        삭제
+                      </button>
 
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      className="rounded-full border border-white/20 bg-black/35 px-3 py-1 text-xs text-slate-200 transition hover:border-white/40"
-                      onClick={() => onTesterEditClick(tester.id)}
-                    >
-                      수정
-                    </button>
-                    <button
-                      className="rounded-full border border-rose-300/40 bg-rose-300/10 px-3 py-1 text-xs text-rose-100 transition hover:bg-rose-300/20"
-                      onClick={() => setPendingDeleteTesterId(tester.id)}
-                    >
-                      삭제
-                    </button>
-                  </div>
+                      {editingTesterFormError ? (
+                        <p className="md:col-span-6 text-xs text-rose-200">
+                          {editingTesterFormError}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-100">
+                          {tester.name}
+                        </p>
+                        <p className="truncate text-xs text-slate-400">
+                          {[
+                            tester.device || "기기 미입력",
+                            tester.osVersion || "OS 미입력",
+                          ].join(" / ")}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          className="rounded-full border border-white/20 bg-black/35 px-3 py-1 text-xs text-slate-200 transition hover:border-white/40"
+                          onClick={() => onTesterEditClick(tester.id)}
+                        >
+                          수정
+                        </button>
+                        <button
+                          className="rounded-full border border-rose-300/40 bg-rose-300/10 px-3 py-1 text-xs text-rose-100 transition hover:bg-rose-300/20"
+                          onClick={() => setPendingDeleteTesterId(tester.id)}
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </article>
               ))}
             </div>
