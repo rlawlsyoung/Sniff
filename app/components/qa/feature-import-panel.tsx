@@ -24,7 +24,7 @@ export function FeatureImportPanel({
   return (
     <section className="grid gap-4 [animation:fade-up_460ms_ease-out_80ms_both] lg:grid-cols-[1.2fr_1fr]">
       <article
-        className={`rounded-2xl border bg-white dark:bg-slate-900/60 p-5 shadow-sm shadow-slate-200/40 dark:shadow-none backdrop-blur-xl transition ${
+        className={`rounded-2xl border bg-white/60 dark:bg-slate-900/50 p-5 shadow-sm shadow-slate-200/40 dark:shadow-none backdrop-blur-xl transition ${
           isDragActive
             ? "border-cyan-500/70 dark:border-cyan-300/70 ring-4 ring-cyan-500/20 dark:ring-cyan-300/20"
             : "border-slate-200 dark:border-slate-800"
@@ -61,7 +61,7 @@ export function FeatureImportPanel({
         </div>
       </article>
 
-      <article className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-5 shadow-sm shadow-slate-200/40 dark:shadow-none backdrop-blur-xl">
+      <article className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/50 p-5 shadow-sm shadow-slate-200/40 dark:shadow-none backdrop-blur-xl">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
           직접 붙여넣기
         </h2>

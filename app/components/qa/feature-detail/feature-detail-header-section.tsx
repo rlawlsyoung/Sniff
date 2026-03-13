@@ -21,7 +21,7 @@ export function FeatureDetailHeaderSection({
 
   return (
     <>
-      <section className="rounded-2xl border border-slate-200 dark:border-slate-800 flex items-start justify-between bg-white dark:bg-slate-900/60 p-5 shadow-sm shadow-slate-200/40 dark:shadow-none backdrop-blur-xl">
+      <section className="rounded-2xl border border-slate-200 dark:border-slate-800 flex items-start justify-between bg-white/60 dark:bg-slate-900/50 p-5 shadow-sm shadow-slate-200/40 dark:shadow-none backdrop-blur-xl">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
             {fileName}
