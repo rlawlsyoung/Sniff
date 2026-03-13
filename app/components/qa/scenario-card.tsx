@@ -475,9 +475,6 @@ export function ScenarioCard({
                         {testerMeta || "기기/OS 정보 미입력"}
                       </p>
                     </div>
-                    <span className="rounded-full border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 px-2.5 py-1 text-xs text-slate-800 dark:text-slate-200">
-                      {STATUS_LABELS[result.status]}
-                    </span>
                   </div>
 
                   <div className="mt-2 flex flex-wrap gap-2">
