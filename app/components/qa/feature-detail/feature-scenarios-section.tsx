@@ -9,6 +9,7 @@ import {
   ScenarioStatus,
   TesterScenarioResult,
 } from "../../../lib/gherkin";
+import { useDebouncedValue } from "../../../hooks/use-debounced-value";
 import { ScenarioCard } from "../scenario-card";
 import { ScenarioStats } from "../scenario-stats";
 import { ChipButton } from "../../ui/chip-button";
@@ -41,13 +42,14 @@ export function FeatureScenariosSection({
   middleContent,
 }: FeatureScenariosSectionProps) {
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebouncedValue(query, 250);
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("all");
   const [featureFilter, setFeatureFilter] = useState<FeatureFilter>("all");
 
   const stats = useMemo(() => getScenarioStats(scenarios), [scenarios]);
 
   const filteredScenarios = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = debouncedQuery.trim().toLowerCase();
 
     return scenarios.filter((scenario) => {
       if (featureFilter !== "all" && scenario.feature !== featureFilter) {
@@ -76,7 +78,7 @@ export function FeatureScenariosSection({
 
       return haystack.includes(q);
     });
-  }, [scenarios, featureFilter, statusFilter, query, testers]);
+  }, [scenarios, featureFilter, statusFilter, debouncedQuery, testers]);
 
   const featureFilters = useMemo(() => {
     const names = new Set<string>();

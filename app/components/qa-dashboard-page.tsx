@@ -12,6 +12,7 @@ import { FeatureFileListSection } from "./qa/feature-file-list-section";
 import { FeatureImportPanel } from "./qa/feature-import-panel";
 import { FeatureDeletePopup } from "./qa/feature-delete-popup";
 import { useFeatureFiles } from "../hooks/use-feature-files";
+import { useDebouncedValue } from "../hooks/use-debounced-value";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -37,13 +38,14 @@ export default function QaDashboardPage() {
   } = useFeatureFiles();
   const [rawText, setRawText] = useState("");
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebouncedValue(query, 250);
   const [currentPage, setCurrentPage] = useState(1);
   const [notice, setNotice] = useState<ImportNotice | null>(null);
   const [isDragActive, setIsDragActive] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = debouncedQuery.trim().toLowerCase();
 
     return featureFiles.filter((item) => {
       if (!q) {
@@ -56,7 +58,7 @@ export default function QaDashboardPage() {
 
       return haystack.includes(q);
     });
-  }, [featureFiles, query]);
+  }, [featureFiles, debouncedQuery]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   const activePage = Math.min(currentPage, totalPages);
