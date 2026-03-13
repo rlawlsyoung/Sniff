@@ -20,6 +20,7 @@ import {
 } from "../lib/feature-files";
 
 const SYNC_DEBOUNCE_MS = 450;
+const REALTIME_REFRESH_DEBOUNCE_MS = 300;
 
 type FeatureFilesResponse = {
   featureFiles: QaFeatureFile[];
@@ -27,6 +28,12 @@ type FeatureFilesResponse = {
 
 type UpsertFeatureFileResponse = {
   featureFile: QaFeatureFile;
+};
+
+type FeatureFilesRealtimeEvent = {
+  type: "connected" | "upsert" | "delete" | "clear" | "sync";
+  fileId?: string;
+  updatedAt: string;
 };
 
 function replaceFeatureFile(
@@ -54,6 +61,64 @@ async function parseResponseJson<T>(response: Response): Promise<T> {
   return (await response.json()) as T;
 }
 
+function parseRealtimeEvent(data: string): FeatureFilesRealtimeEvent | null {
+  try {
+    const parsed = JSON.parse(data) as Partial<FeatureFilesRealtimeEvent>;
+
+    if (
+      !parsed ||
+      (parsed.type !== "connected" &&
+        parsed.type !== "upsert" &&
+        parsed.type !== "delete" &&
+        parsed.type !== "clear" &&
+        parsed.type !== "sync")
+    ) {
+      return null;
+    }
+
+    return {
+      type: parsed.type,
+      fileId: typeof parsed.fileId === "string" ? parsed.fileId : undefined,
+      updatedAt:
+        typeof parsed.updatedAt === "string" && parsed.updatedAt
+          ? parsed.updatedAt
+          : new Date().toISOString(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function mergePendingLocalFiles(
+  serverFiles: QaFeatureFile[],
+  localFiles: QaFeatureFile[],
+  pendingFileIds: Set<string>,
+) {
+  if (pendingFileIds.size === 0) {
+    return serverFiles;
+  }
+
+  const localById = new Map(localFiles.map((file) => [file.id, file]));
+  const merged = [...serverFiles];
+
+  for (const pendingId of pendingFileIds) {
+    const localFile = localById.get(pendingId);
+    if (!localFile) {
+      continue;
+    }
+
+    const serverIndex = merged.findIndex((item) => item.id === pendingId);
+    if (serverIndex === -1) {
+      merged.unshift(localFile);
+      continue;
+    }
+
+    merged[serverIndex] = localFile;
+  }
+
+  return merged;
+}
+
 export function useFeatureFiles() {
   const [featureFiles, setFeatureFiles] = useState<QaFeatureFile[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -63,6 +128,9 @@ export function useFeatureFiles() {
   const serverUpdatedAtRef = useRef<Map<string, string>>(new Map());
   const syncTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map(),
+  );
+  const realtimeRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
   );
 
   useEffect(() => {
@@ -85,6 +153,12 @@ export function useFeatureFiles() {
             .map((item) => normalizeFeatureFile(item))
             .filter((item): item is QaFeatureFile => Boolean(item))
         : [];
+      const pendingFileIds = new Set(syncTimersRef.current.keys());
+      const normalizedWithLocalPending = mergePendingLocalFiles(
+        normalized,
+        featureFilesRef.current,
+        pendingFileIds,
+      );
 
       const nextServerUpdatedAt = new Map<string, string>();
       for (const item of normalized) {
@@ -92,7 +166,7 @@ export function useFeatureFiles() {
       }
       serverUpdatedAtRef.current = nextServerUpdatedAt;
 
-      setFeatureFiles(sortFeatureFiles(normalized));
+      setFeatureFiles(sortFeatureFiles(normalizedWithLocalPending));
       setSyncError(null);
     } catch {
       setSyncError(
@@ -178,6 +252,17 @@ export function useFeatureFiles() {
     syncTimersRef.current.delete(fileId);
   }, []);
 
+  const scheduleRealtimeRefresh = useCallback(() => {
+    if (realtimeRefreshTimerRef.current) {
+      clearTimeout(realtimeRefreshTimerRef.current);
+    }
+
+    realtimeRefreshTimerRef.current = setTimeout(() => {
+      realtimeRefreshTimerRef.current = null;
+      void refreshFeatureFiles();
+    }, REALTIME_REFRESH_DEBOUNCE_MS);
+  }, [refreshFeatureFiles]);
+
   useEffect(() => {
     void refreshFeatureFiles();
 
@@ -188,8 +273,39 @@ export function useFeatureFiles() {
         clearTimeout(timer);
       }
       timers.clear();
+
+      if (realtimeRefreshTimerRef.current) {
+        clearTimeout(realtimeRefreshTimerRef.current);
+        realtimeRefreshTimerRef.current = null;
+      }
     };
   }, [refreshFeatureFiles]);
+
+  useEffect(() => {
+    const eventSource = new EventSource("/api/feature-files/events");
+
+    const onFeatureFilesEvent = (event: MessageEvent<string>) => {
+      const payload = parseRealtimeEvent(event.data);
+      if (!payload || payload.type === "connected") {
+        return;
+      }
+
+      scheduleRealtimeRefresh();
+    };
+
+    eventSource.addEventListener(
+      "feature-files",
+      onFeatureFilesEvent as EventListener,
+    );
+
+    return () => {
+      eventSource.removeEventListener(
+        "feature-files",
+        onFeatureFilesEvent as EventListener,
+      );
+      eventSource.close();
+    };
+  }, [scheduleRealtimeRefresh]);
 
   const applyFeatureFileMutation = useCallback(
     (fileId: string, mutate: (file: QaFeatureFile) => QaFeatureFile | null) => {

@@ -13,7 +13,9 @@
 - `app/globals.css`: Global styles.
 - `app/api/feature-files/route.ts`: Feature file list/clear API.
 - `app/api/feature-files/[fileId]/route.ts`: Feature file upsert/delete API.
+- `app/api/feature-files/events/route.ts`: SSE realtime change feed API.
 - `app/lib/server/feature-files-store.ts`: Server persistence layer.
+- `app/lib/server/feature-files-events.ts`: In-process event pub/sub hub for SSE broadcast.
 - `app/lib/feature-files.ts`: Shared normalization/create helpers.
 - `public/`: Static assets.
 
@@ -32,9 +34,12 @@
 - Implement clipboard automation in client component with `window` paste listener and `ClipboardEvent.clipboardData.items` file detection.
 - Only auto-import when `.feature` file object is present in clipboard; plain path strings cannot be read due to browser sandbox.
 - Use `useFeatureFiles` API sync flow: load via `GET /api/feature-files`, save via `PUT /api/feature-files/[fileId]`, remove via `DELETE /api/feature-files/[fileId]`.
+- Realtime sync uses `GET /api/feature-files/events` (SSE); mutation routes publish `upsert`/`delete`/`clear` events and clients debounce `refreshFeatureFiles()` on incoming events.
+- Because Next runtime contexts can be isolated, SSE route also polls store snapshots (1s) and emits `sync` events as fallback so cross-PC updates are still detected.
 - For multi-PC stale writes, send `baseUpdatedAt` from client and merge on server in `app/lib/server/feature-files-store.ts` instead of last-write overwrite.
 - Resolve stale-write conflicts by merging testers, scenario tester results (latest `updatedAt` wins per tester result), and recalculating aggregate scenario status.
 - In `useFeatureFiles`, avoid mutable sync flags that are set inside `setState` updaters; compute mutations from `featureFilesRef.current` and schedule sync immediately after committing next state.
+- During realtime refresh, preserve files with pending local debounce sync timers so SSE pulls do not overwrite unsynced optimistic edits.
 - Server store default path is `data/feature-files.json`, override with env `SNIFF_DATA_FILE`.
 
 ## Verified Commands

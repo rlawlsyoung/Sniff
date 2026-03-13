@@ -4,6 +4,7 @@ import {
   deleteFeatureFile,
   upsertFeatureFile,
 } from "@/app/lib/server/feature-files-store";
+import { publishFeatureFilesEvent } from "@/app/lib/server/feature-files-events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,6 +52,12 @@ export async function PUT(request: Request, { params }: RouteContext) {
     },
   );
 
+  publishFeatureFilesEvent({
+    type: "upsert",
+    fileId: saved.id,
+    updatedAt: saved.updatedAt,
+  });
+
   return NextResponse.json({ featureFile: saved });
 }
 
@@ -61,6 +68,12 @@ export async function DELETE(_: Request, { params }: RouteContext) {
   if (!removed) {
     return NextResponse.json({ message: "not-found" }, { status: 404 });
   }
+
+  publishFeatureFilesEvent({
+    type: "delete",
+    fileId,
+    updatedAt: new Date().toISOString(),
+  });
 
   return new NextResponse(null, { status: 204 });
 }

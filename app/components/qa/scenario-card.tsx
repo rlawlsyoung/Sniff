@@ -429,9 +429,7 @@ export function ScenarioCard({
             <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-300">
               QA 진행 기록
             </p>
-            <p className="text-xs text-slate-400">
-              진행자 {testers.length}명, 댓글 {testers.length}개
-            </p>
+            <p className="text-xs text-slate-400">진행자 {testers.length}명</p>
           </div>
 
           <div className="mt-3 grid gap-3">

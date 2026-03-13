@@ -45,8 +45,10 @@ SNIFF_DATA_FILE=/Users/yourname/sniff-data/qa-files.json pnpm dev
 - `DELETE /api/feature-files`: 전체 삭제
 - `PUT /api/feature-files/[fileId]`: 파일 단위 upsert
 - `DELETE /api/feature-files/[fileId]`: 파일 단위 삭제
+- `GET /api/feature-files/events`: SSE 기반 실시간 변경 이벤트 스트림
 
 클라이언트는 변경사항을 로컬 UI에 즉시 반영하고, 파일 단위로 debounce 동기화합니다.
+또한 SSE 스트림을 구독해 LAN 내 다른 사용자의 변경사항을 실시간 반영합니다.
 
 ## 사용 방법
 
