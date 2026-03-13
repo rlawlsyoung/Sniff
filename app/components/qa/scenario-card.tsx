@@ -6,6 +6,7 @@ import {
   TesterScenarioResult,
 } from "../../lib/gherkin";
 import { ChipButton } from "../ui/chip-button";
+import { NoteActionButton } from "./note-action-button";
 
 const STATUS_LABELS: Record<ScenarioStatus, string> = {
   todo: "미실행",
@@ -261,9 +262,6 @@ export function ScenarioCard({
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full border border-cyan-300/35 bg-cyan-300/15 px-3 py-1 text-xs font-semibold text-cyan-100">
           {scenario.feature}
-        </span>
-        <span className="rounded-full border border-white/20 bg-black/30 px-3 py-1 text-xs text-slate-300">
-          {new Date(scenario.createdAt).toLocaleString()}
         </span>
       </div>
 
@@ -529,19 +527,14 @@ export function ScenarioCard({
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {hasSavedNote ? (
-                            <ChipButton
-                              variant="subtle"
-                              size="xs"
-                              className="px-3"
+                            <NoteActionButton
                               onClick={() => cancelTesterNoteEdit(tester.id)}
                             >
                               취소
-                            </ChipButton>
+                            </NoteActionButton>
                           ) : null}
-                          <ChipButton
-                            variant="accent"
-                            size="xs"
-                            className="px-3 font-semibold"
+                          <NoteActionButton
+                            variant="primary"
                             disabled={!isNoteChanged}
                             onClick={() =>
                               submitTesterNote(
@@ -553,7 +546,7 @@ export function ScenarioCard({
                             }
                           >
                             등록
-                          </ChipButton>
+                          </NoteActionButton>
                         </div>
                       </div>
                     </div>
@@ -563,16 +556,13 @@ export function ScenarioCard({
                         {savedNote}
                       </div>
                       <div className="mt-2 flex justify-end">
-                        <ChipButton
-                          variant="subtle"
-                          size="xs"
-                          className="px-3 font-semibold"
+                        <NoteActionButton
                           onClick={() =>
                             startTesterNoteEdit(tester.id, savedNote)
                           }
                         >
                           수정
-                        </ChipButton>
+                        </NoteActionButton>
                       </div>
                     </div>
                   )}
