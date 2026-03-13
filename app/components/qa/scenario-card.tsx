@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   QaScenario,
   QaTester,
@@ -185,8 +186,75 @@ export function ScenarioCard({
   testers,
   onTesterResultChange,
 }: ScenarioCardProps) {
+  const [noteDraftByTesterId, setNoteDraftByTesterId] = useState<
+    Record<string, string>
+  >({});
+  const [editingTesterMap, setEditingTesterMap] = useState<
+    Record<string, true>
+  >({});
+
   const parsedSteps = scenario.steps.map(parseStep);
   const displayRows = buildDisplayRows(parsedSteps);
+
+  const setTesterNoteDraft = (testerId: string, note: string) => {
+    setNoteDraftByTesterId((previous) => ({
+      ...previous,
+      [testerId]: note,
+    }));
+  };
+
+  const clearTesterNoteDraft = (testerId: string) => {
+    setNoteDraftByTesterId((previous) => {
+      if (!(testerId in previous)) {
+        return previous;
+      }
+
+      const next = { ...previous };
+      delete next[testerId];
+      return next;
+    });
+  };
+
+  const startTesterNoteEdit = (testerId: string, currentNote: string) => {
+    setEditingTesterMap((previous) => ({
+      ...previous,
+      [testerId]: true,
+    }));
+    setTesterNoteDraft(testerId, currentNote);
+  };
+
+  const stopTesterNoteEdit = (testerId: string) => {
+    setEditingTesterMap((previous) => {
+      if (!(testerId in previous)) {
+        return previous;
+      }
+
+      const next = { ...previous };
+      delete next[testerId];
+      return next;
+    });
+  };
+
+  const submitTesterNote = (
+    scenarioId: string,
+    testerId: string,
+    savedNote: string,
+    draftNote: string,
+  ) => {
+    if (draftNote !== savedNote) {
+      onTesterResultChange(scenarioId, testerId, {
+        note: draftNote,
+      });
+    }
+
+    stopTesterNoteEdit(testerId);
+    clearTesterNoteDraft(testerId);
+  };
+
+  const cancelTesterNoteEdit = (testerId: string) => {
+    stopTesterNoteEdit(testerId);
+    clearTesterNoteDraft(testerId);
+  };
 
   return (
     <article className="rounded-2xl border border-white/10 bg-white/4 p-5 shadow-[0_14px_32px_rgba(0,0,0,0.28)] backdrop-blur-xl">
@@ -374,6 +442,12 @@ export function ScenarioCard({
                 status: "todo",
                 note: "",
               };
+              const savedNote = result.note;
+              const hasSavedNote = savedNote.trim().length > 0;
+              const isEditing =
+                editingTesterMap[tester.id] === true || !hasSavedNote;
+              const draftNote = noteDraftByTesterId[tester.id] ?? savedNote;
+              const isNoteChanged = draftNote !== savedNote;
               const testerMeta = [tester.device, tester.osVersion]
                 .filter((value) => value.trim().length > 0)
                 .join(" / ");
@@ -425,16 +499,83 @@ export function ScenarioCard({
                     )}
                   </div>
 
-                  <textarea
-                    className="mt-2 h-20 w-full resize-y rounded-lg border border-white/15 bg-black/35 p-2.5 text-sm text-slate-100 outline-none ring-cyan-300/25 placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-4"
-                    placeholder={`${tester.name} 진행 메모`}
-                    value={result.note}
-                    onChange={(event) =>
-                      onTesterResultChange(scenario.id, tester.id, {
-                        note: event.target.value,
-                      })
-                    }
-                  />
+                  {isEditing ? (
+                    <div className="mt-2">
+                      <textarea
+                        className="h-24 w-full resize-y rounded-lg border border-white/15 bg-black/35 p-2.5 text-sm text-slate-100 outline-none ring-cyan-300/25 placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-4"
+                        placeholder={`${tester.name} 진행 메모`}
+                        value={draftNote}
+                        onChange={(event) =>
+                          setTesterNoteDraft(tester.id, event.target.value)
+                        }
+                        onKeyDown={(event) => {
+                          if (
+                            (event.metaKey || event.ctrlKey) &&
+                            event.key === "Enter"
+                          ) {
+                            submitTesterNote(
+                              scenario.id,
+                              tester.id,
+                              savedNote,
+                              draftNote,
+                            );
+                          }
+                        }}
+                      />
+
+                      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs text-slate-400">
+                          입력 후 등록 버튼을 눌러 저장합니다.
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {hasSavedNote ? (
+                            <ChipButton
+                              variant="subtle"
+                              size="xs"
+                              className="px-3"
+                              onClick={() => cancelTesterNoteEdit(tester.id)}
+                            >
+                              취소
+                            </ChipButton>
+                          ) : null}
+                          <ChipButton
+                            variant="accent"
+                            size="xs"
+                            className="px-3 font-semibold"
+                            disabled={!isNoteChanged}
+                            onClick={() =>
+                              submitTesterNote(
+                                scenario.id,
+                                tester.id,
+                                savedNote,
+                                draftNote,
+                              )
+                            }
+                          >
+                            등록
+                          </ChipButton>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-2">
+                      <div className="min-h-20 rounded-lg border border-white/15 bg-black/25 px-2.5 py-2 text-sm text-slate-100 whitespace-pre-wrap">
+                        {savedNote}
+                      </div>
+                      <div className="mt-2 flex justify-end">
+                        <ChipButton
+                          variant="subtle"
+                          size="xs"
+                          className="px-3 font-semibold"
+                          onClick={() =>
+                            startTesterNoteEdit(tester.id, savedNote)
+                          }
+                        >
+                          수정
+                        </ChipButton>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
