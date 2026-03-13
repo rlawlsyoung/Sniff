@@ -21,13 +21,15 @@ export function FeatureDetailHeaderSection({
 
   return (
     <>
-      <section className="rounded-2xl border border-white/10 flex items-start justify-between bg-white/4 p-5 shadow-[0_14px_32px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+      <section className="rounded-2xl border border-slate-200 dark:border-slate-800 flex items-start justify-between bg-white dark:bg-slate-900/60 p-5 shadow-sm shadow-slate-200/40 dark:shadow-none backdrop-blur-xl">
         <div>
-          <h1 className="text-2xl font-semibold text-white">{fileName}</h1>
-          <p className="mt-2 text-sm text-slate-300">
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
+            {fileName}
+          </h1>
+          <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
             {featureNames.join(", ") || "Untitled Feature"}
           </p>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
             업데이트: {new Date(updatedAt).toLocaleString()}
           </p>
         </div>

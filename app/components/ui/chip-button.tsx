@@ -18,7 +18,7 @@ type ChipButtonClassOptions = {
 };
 
 const CHIP_BUTTON_BASE_CLASSNAME =
-  "inline-flex items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/40 disabled:cursor-not-allowed disabled:opacity-45";
+  "inline-flex items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40 dark:ring-cyan-300/40 disabled:cursor-not-allowed disabled:opacity-45";
 
 const CHIP_BUTTON_SIZE_CLASSNAME: Record<ChipButtonSize, string> = {
   xs: "px-2.5 py-1 text-xs",
@@ -28,17 +28,18 @@ const CHIP_BUTTON_SIZE_CLASSNAME: Record<ChipButtonSize, string> = {
 };
 
 const CHIP_BUTTON_VARIANT_CLASSNAME: Record<ChipButtonVariant, string> = {
-  neutral: "border-white/20 bg-black/30 text-slate-200 hover:border-white/40",
+  neutral:
+    "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700",
   neutralSoft:
-    "border-white/20 bg-black/20 text-slate-200 hover:border-white/35",
+    "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800",
   danger:
-    "border-rose-300/45 bg-rose-300/10 text-rose-100 hover:bg-rose-300/20",
+    "border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50",
   accent:
-    "border-cyan-300/45 bg-cyan-300/12 text-cyan-100 hover:bg-cyan-300/20",
+    "border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50",
   subtle:
-    "border-white/15 bg-black/30 text-slate-300 hover:border-white/35 hover:text-slate-100",
+    "border-transparent bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200",
   ghost:
-    "border-white/10 bg-white/5 text-slate-300 hover:border-white/30 hover:text-slate-100",
+    "border-transparent bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200",
   custom: "",
 };
 

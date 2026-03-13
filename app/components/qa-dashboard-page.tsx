@@ -258,8 +258,8 @@ export default function QaDashboardPage() {
         <section
           className={`rounded-2xl border px-4 py-3 text-sm backdrop-blur ${
             notice.type === "success"
-              ? "border-emerald-300/35 bg-emerald-300/10 text-emerald-100"
-              : "border-rose-300/35 bg-rose-300/10 text-rose-100"
+              ? "border-emerald-500/35 dark:border-emerald-300/35 bg-emerald-500/10 dark:bg-emerald-300/10 text-emerald-800 dark:text-emerald-100"
+              : "border-rose-500/35 dark:border-rose-300/35 bg-rose-500/10 dark:bg-rose-300/10 text-rose-800 dark:text-rose-100"
           }`}
         >
           {notice.message}
@@ -267,12 +267,12 @@ export default function QaDashboardPage() {
       ) : null}
 
       {syncError ? (
-        <section className="rounded-2xl border border-rose-300/35 bg-rose-300/10 px-4 py-3 text-sm text-rose-100 backdrop-blur">
+        <section className="rounded-2xl border border-rose-500/35 dark:border-rose-300/35 bg-rose-500/10 dark:bg-rose-300/10 px-4 py-3 text-sm text-rose-800 dark:text-rose-100 backdrop-blur">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p>{syncError}</p>
             <button
               type="button"
-              className="rounded-full border border-rose-200/50 bg-rose-200/15 px-3 py-1 text-xs font-semibold text-rose-50 transition hover:bg-rose-200/25"
+              className="rounded-full border border-rose-400/50 dark:border-rose-200/50 bg-rose-500/15 dark:bg-rose-200/15 px-3 py-1 text-xs font-semibold text-rose-900 dark:text-rose-50 transition hover:bg-rose-500/25 dark:hover:bg-rose-200/25"
               onClick={() => {
                 void refreshFeatureFiles();
               }}

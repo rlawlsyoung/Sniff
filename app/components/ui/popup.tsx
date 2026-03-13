@@ -36,15 +36,15 @@ export function Popup({
       }}
     >
       <AlertDialog.Portal>
-        <AlertDialog.Overlay className="popup-overlay fixed inset-0 z-50 bg-[#02050d]/80 backdrop-blur-sm" />
+        <AlertDialog.Overlay className="popup-overlay fixed inset-0 z-50 bg-slate-900/20 dark:bg-[#02050d]/80 backdrop-blur-sm" />
 
-        <AlertDialog.Content className="popup-content fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-md gap-4 rounded-3xl border border-white/15 bg-[linear-gradient(180deg,rgba(15,24,40,0.94)_0%,rgba(10,16,30,0.94)_100%)] p-6 text-slate-100 shadow-[0_30px_70px_rgba(0,0,0,0.45)] focus:outline-none">
-          <AlertDialog.Title className="text-lg font-semibold text-white">
+        <AlertDialog.Content className="popup-content fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-md gap-4 rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[linear-gradient(180deg,rgba(15,24,40,0.94)_0%,rgba(10,16,30,0.94)_100%)] p-6 text-slate-900 dark:text-slate-100 shadow-xl shadow-slate-900/20 dark:shadow-black/50 focus:outline-none">
+          <AlertDialog.Title className="text-lg font-semibold text-slate-900 dark:text-white">
             {title}
           </AlertDialog.Title>
 
           {description ? (
-            <AlertDialog.Description className="mt-2 text-sm leading-relaxed text-slate-300">
+            <AlertDialog.Description className="mt-2 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
               {description}
             </AlertDialog.Description>
           ) : null}

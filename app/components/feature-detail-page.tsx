@@ -52,7 +52,7 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
   if (!isHydrated) {
     return (
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
-        <div className="rounded-2xl border border-white/15 bg-white/3 p-8 text-center text-sm text-slate-300">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/50 p-8 text-center text-sm text-slate-700 dark:text-slate-300">
           Feature 데이터를 불러오는 중입니다...
         </div>
       </div>
@@ -65,7 +65,7 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
         <Link href="/" className={chipButtonClassName({ className: "w-fit" })}>
           메인으로 돌아가기
         </Link>
-        <div className="rounded-2xl border border-dashed border-white/30 bg-white/3 p-8 text-center text-sm text-slate-300">
+        <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50 p-8 text-center text-sm text-slate-700 dark:text-slate-300">
           해당 Feature 파일을 찾을 수 없습니다. 메인 화면에서 다시 선택해주세요.
         </div>
       </div>
@@ -76,7 +76,7 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
     <>
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
         {syncError ? (
-          <section className="rounded-2xl border border-rose-300/35 bg-rose-300/10 px-4 py-3 text-sm text-rose-100 backdrop-blur">
+          <section className="rounded-2xl border border-rose-500/35 dark:border-rose-300/35 bg-rose-500/10 dark:bg-rose-300/10 px-4 py-3 text-sm text-rose-800 dark:text-rose-100 backdrop-blur">
             {syncError}
           </section>
         ) : null}

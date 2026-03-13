@@ -15,9 +15,11 @@ const STATUS_LABELS: Record<ScenarioStatus, string> = {
 };
 
 const STATUS_BUTTON_STYLES: Record<ScenarioStatus, string> = {
-  todo: "border-slate-500/70 text-slate-300 hover:border-slate-300",
-  passed: "border-emerald-400/50 text-emerald-300 hover:border-emerald-300",
-  failed: "border-rose-400/50 text-rose-300 hover:border-rose-300",
+  todo: "border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800",
+  passed:
+    "border-emerald-300 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50",
+  failed:
+    "border-rose-300 dark:border-rose-800/60 bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50",
 };
 
 type ParsedStepRow = {
@@ -43,15 +45,18 @@ type DisplayRow =
     };
 
 const KEYWORD_STYLES: Record<string, string> = {
-  Given: "border-sky-300/45 bg-sky-300/15 text-sky-100",
-  When: "border-amber-300/45 bg-amber-300/15 text-amber-100",
-  Then: "border-emerald-300/45 bg-emerald-300/15 text-emerald-100",
-  And: "border-indigo-300/45 bg-indigo-300/15 text-indigo-100",
-  But: "border-rose-300/45 bg-rose-300/15 text-rose-100",
-  Step: "border-cyan-300/45 bg-cyan-300/15 text-cyan-100",
-  Examples: "border-violet-300/45 bg-violet-300/15 text-violet-100",
-  Table: "border-slate-300/35 bg-slate-300/10 text-slate-200",
-  Text: "border-slate-300/35 bg-slate-300/10 text-slate-200",
+  Given:
+    "border-sky-200 dark:border-sky-900/50 bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-300",
+  When: "border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300",
+  Then: "border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300",
+  And: "border-indigo-200 dark:border-indigo-900/50 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300",
+  But: "border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300",
+  Step: "border-cyan-200 dark:border-cyan-900/50 bg-cyan-50 dark:bg-cyan-950/30 text-cyan-700 dark:text-cyan-300",
+  Examples:
+    "border-violet-200 dark:border-violet-900/50 bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300",
+  Table:
+    "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-slate-800 dark:text-slate-300",
+  Text: "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-slate-800 dark:text-slate-300",
 };
 
 function toKeywordLabel(rawKeyword: string) {
@@ -258,14 +263,14 @@ export function ScenarioCard({
   };
 
   return (
-    <article className="rounded-2xl border border-white/10 bg-white/4 p-5 shadow-[0_14px_32px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+    <article className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-5 shadow-sm shadow-slate-200/40 dark:shadow-none backdrop-blur-xl">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-full border border-cyan-300/35 bg-cyan-300/15 px-3 py-1 text-xs font-semibold text-cyan-100">
+        <span className="rounded-full border border-cyan-200 dark:border-cyan-900/50 bg-cyan-50 dark:bg-cyan-950/30 px-3 py-1 text-xs font-semibold text-cyan-800 dark:text-cyan-300">
           {scenario.feature}
         </span>
       </div>
 
-      <h3 className="mt-3 text-lg font-semibold text-white">
+      <h3 className="mt-3 text-lg font-semibold text-slate-900 dark:text-white">
         {scenario.title}
       </h3>
 
@@ -274,7 +279,7 @@ export function ScenarioCard({
           {scenario.tags.map((tag) => (
             <span
               key={`${scenario.id}-${tag}`}
-              className="rounded-full border border-blue-200/25 bg-blue-300/15 px-2.5 py-1 text-xs font-medium text-blue-100"
+              className="rounded-full border border-blue-200 dark:border-blue-800/50 bg-blue-50 dark:bg-blue-900/40 px-2.5 py-1 text-xs font-medium text-blue-700 dark:text-blue-300"
             >
               {tag}
             </span>
@@ -283,9 +288,9 @@ export function ScenarioCard({
       ) : null}
 
       {displayRows.length > 0 ? (
-        <div className="mt-3 overflow-hidden rounded-xl border border-white/10 bg-black/30">
-          <table className="w-full border-collapse text-sm text-slate-200">
-            <thead className="bg-white/3 text-xs uppercase tracking-wide text-slate-300">
+        <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+          <table className="w-full border-collapse text-sm text-slate-800 dark:text-slate-200">
+            <thead className="bg-slate-100 dark:bg-slate-800/50 text-xs uppercase tracking-wide text-slate-700 dark:text-slate-300">
               <tr>
                 <th className="w-28 px-3 py-2 text-left font-semibold">문법</th>
                 <th className="px-3 py-2 text-left font-semibold">내용</th>
@@ -299,7 +304,7 @@ export function ScenarioCard({
                   return (
                     <tr
                       key={`${scenario.id}-step-${index}`}
-                      className="border-t border-white/10 align-top"
+                      className="border-t border-slate-200 dark:border-slate-800 align-top"
                     >
                       <td className="px-3 py-2.5">
                         <span
@@ -310,16 +315,16 @@ export function ScenarioCard({
                           Examples
                         </span>
                       </td>
-                      <td className="px-3 py-2.5 text-slate-100">
-                        <div className="overflow-hidden rounded-lg border border-white/15 bg-black/25">
-                          <table className="w-full border-collapse text-xs text-slate-200">
-                            <thead className="bg-white/5 text-[11px] uppercase tracking-wide text-slate-300">
+                      <td className="px-3 py-2.5 text-slate-900 dark:text-slate-100">
+                        <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900">
+                          <table className="w-full border-collapse text-xs text-slate-800 dark:text-slate-200">
+                            <thead className="bg-slate-100 dark:bg-slate-800/80 text-[11px] uppercase tracking-wide text-slate-700 dark:text-slate-300">
                               <tr>
                                 {displayRow.table.header.map(
                                   (headerCell, headerIndex) => (
                                     <th
                                       key={`${scenario.id}-examples-head-${index}-${headerIndex}`}
-                                      className="border-b border-white/15 px-2.5 py-2 text-left font-semibold"
+                                      className="border-b border-slate-200 dark:border-slate-700 px-2.5 py-2 text-left font-semibold"
                                     >
                                       {headerCell}
                                     </th>
@@ -332,7 +337,7 @@ export function ScenarioCard({
                                 <tr>
                                   <td
                                     colSpan={columnCount}
-                                    className="px-2.5 py-2 text-slate-400"
+                                    className="px-2.5 py-2 text-slate-600 dark:text-slate-400"
                                   >
                                     예제 데이터 행이 없습니다.
                                   </td>
@@ -342,12 +347,12 @@ export function ScenarioCard({
                                   (rowCells, rowIndex) => (
                                     <tr
                                       key={`${scenario.id}-examples-row-${index}-${rowIndex}`}
-                                      className="border-t border-white/10"
+                                      className="border-t border-slate-200 dark:border-slate-800"
                                     >
                                       {rowCells.map((cell, cellIndex) => (
                                         <td
                                           key={`${scenario.id}-examples-cell-${index}-${rowIndex}-${cellIndex}`}
-                                          className="px-2.5 py-2 text-slate-100"
+                                          className="px-2.5 py-2 text-slate-900 dark:text-slate-100"
                                         >
                                           {cell}
                                         </td>
@@ -369,7 +374,7 @@ export function ScenarioCard({
                 return (
                   <tr
                     key={`${scenario.id}-step-${index}`}
-                    className="border-t border-white/10 align-top"
+                    className="border-t border-slate-200 dark:border-slate-800 align-top"
                   >
                     <td className="px-3 py-2.5">
                       <span
@@ -380,9 +385,9 @@ export function ScenarioCard({
                         {row.keyword}
                       </span>
                     </td>
-                    <td className="px-3 py-2.5 text-slate-100">
+                    <td className="px-3 py-2.5 text-slate-900 dark:text-slate-100">
                       {row.kind === "examples" ? (
-                        <span className="text-slate-300">
+                        <span className="text-slate-700 dark:text-slate-300">
                           예제 블록에 테이블 데이터가 없습니다.
                         </span>
                       ) : row.kind === "table" ? (
@@ -391,19 +396,23 @@ export function ScenarioCard({
                             {row.cells.map((cell, cellIndex) => (
                               <span
                                 key={`${scenario.id}-step-${index}-cell-${cellIndex}`}
-                                className="rounded-md border border-white/15 bg-white/4 px-2 py-1 text-xs text-slate-200"
+                                className="rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-2 py-1 text-xs text-slate-800 dark:text-slate-200"
                               >
                                 {cell}
                               </span>
                             ))}
                           </div>
                         ) : (
-                          <code className="text-xs text-slate-300">| |</code>
+                          <code className="text-xs text-slate-700 dark:text-slate-300">
+                            | |
+                          </code>
                         )
                       ) : row.content ? (
                         row.content
                       ) : (
-                        <span className="text-slate-400">(내용 없음)</span>
+                        <span className="text-slate-600 dark:text-slate-400">
+                          (내용 없음)
+                        </span>
                       )}
                     </td>
                   </tr>
@@ -413,23 +422,27 @@ export function ScenarioCard({
           </table>
         </div>
       ) : (
-        <p className="mt-3 text-sm text-slate-400">등록된 Step이 없습니다.</p>
+        <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
+          등록된 Step이 없습니다.
+        </p>
       )}
 
       {testers.length === 0 ? (
         <>
-          <div className="mt-4 rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs text-amber-100">
+          <div className="mt-4 rounded-xl border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/30 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
             등록된 진행자가 없어 QA를 진행할 수 없습니다. 먼저 상단에서 진행자를
             추가해주세요.
           </div>
         </>
       ) : (
-        <section className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-3.5">
+        <section className="mt-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 p-3.5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-300">
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-700 dark:text-slate-300">
               QA 진행 기록
             </p>
-            <p className="text-xs text-slate-400">진행자 {testers.length}명</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400">
+              진행자 {testers.length}명
+            </p>
           </div>
 
           <div className="mt-3 grid gap-3">
@@ -451,18 +464,18 @@ export function ScenarioCard({
               return (
                 <div
                   key={`${scenario.id}-${tester.id}`}
-                  className="rounded-xl border border-white/10 bg-white/5 p-3"
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/80 p-3"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <p className="text-sm font-semibold text-slate-100">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                         {tester.name}
                       </p>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-slate-600 dark:text-slate-400">
                         {testerMeta || "기기/OS 정보 미입력"}
                       </p>
                     </div>
-                    <span className="rounded-full border border-white/20 bg-black/35 px-2.5 py-1 text-xs text-slate-200">
+                    <span className="rounded-full border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 px-2.5 py-1 text-xs text-slate-800 dark:text-slate-200">
                       {STATUS_LABELS[result.status]}
                     </span>
                   </div>
@@ -479,8 +492,8 @@ export function ScenarioCard({
                               ? status === "todo"
                                 ? "border-slate-200/80 bg-slate-200 text-slate-900"
                                 : status === "passed"
-                                  ? "border-emerald-300/80 bg-emerald-300 text-emerald-950"
-                                  : "border-rose-300/80 bg-rose-300 text-rose-950"
+                                  ? "border-emerald-500/80 dark:border-emerald-300/80 bg-emerald-300 text-emerald-950"
+                                  : "border-rose-500/80 dark:border-rose-300/80 bg-rose-300 text-rose-950"
                               : STATUS_BUTTON_STYLES[status]
                           }`}
                           onClick={() =>
@@ -498,7 +511,7 @@ export function ScenarioCard({
                   {isEditing ? (
                     <div className="mt-2">
                       <textarea
-                        className="h-24 w-full resize-y rounded-lg border border-white/15 bg-black/35 p-2.5 text-sm text-slate-100 outline-none ring-cyan-300/25 placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-4"
+                        className="h-24 w-full resize-y rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 p-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none ring-cyan-500/25 dark:ring-cyan-300/25 placeholder:text-slate-400 dark:placeholder:text-slate-600 dark:text-slate-500 focus:border-cyan-500/60 dark:border-cyan-300/60 focus:ring-4"
                         placeholder={`${tester.name} 진행 메모`}
                         value={draftNote}
                         onChange={(event) =>
@@ -520,7 +533,7 @@ export function ScenarioCard({
                       />
 
                       <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-slate-600 dark:text-slate-400">
                           입력 후 등록 버튼을 눌러 저장합니다.
                         </p>
                         <div className="flex flex-wrap gap-2">
@@ -550,7 +563,7 @@ export function ScenarioCard({
                     </div>
                   ) : (
                     <div className="mt-2">
-                      <div className="min-h-20 rounded-lg border border-white/15 bg-black/25 px-2.5 py-2 text-sm text-slate-100 whitespace-pre-wrap">
+                      <div className="min-h-20 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 px-2.5 py-2 text-sm text-slate-900 dark:text-slate-100 whitespace-pre-wrap">
                         {savedNote}
                       </div>
                       <div className="mt-2 flex justify-end">

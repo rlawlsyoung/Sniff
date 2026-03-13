@@ -111,28 +111,28 @@ export function FeatureTestersSection({
   };
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/4 p-5 shadow-[0_14px_32px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+    <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-5 shadow-sm shadow-slate-200/40 dark:shadow-none backdrop-blur-xl">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-400">
             QA Runner
           </p>
-          <h2 className="mt-1 text-base font-semibold text-slate-100">
+          <h2 className="mt-1 text-base font-semibold text-slate-900 dark:text-slate-100">
             QA 진행자 관리
           </h2>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
             진행자를 추가하면 아래 각 시나리오에 진행자 수만큼 댓글형 실행
             기록이 자동으로 생성됩니다.
           </p>
         </div>
-        <span className="rounded-full border border-white/15 bg-black/30 px-3 py-1 text-xs text-slate-300">
+        <span className="rounded-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 px-3 py-1 text-xs text-slate-700 dark:text-slate-300">
           등록 진행자 {testers.length}명
         </span>
       </div>
 
       <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
         <input
-          className="w-full rounded-xl border border-white/15 bg-black/35 px-3 py-2.5 text-sm text-slate-100 outline-none ring-cyan-300/20 placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-4"
+          className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none ring-cyan-500/20 dark:ring-cyan-300/20 placeholder:text-slate-400 dark:placeholder:text-slate-600 dark:text-slate-500 focus:border-cyan-500/60 dark:border-cyan-300/60 focus:ring-4"
           placeholder="진행자명 (예: 김QA)"
           value={newTesterForm.name}
           onChange={(event) =>
@@ -143,7 +143,7 @@ export function FeatureTestersSection({
           }
         />
         <input
-          className="w-full rounded-xl border border-white/15 bg-black/35 px-3 py-2.5 text-sm text-slate-100 outline-none ring-cyan-300/20 placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-4"
+          className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none ring-cyan-500/20 dark:ring-cyan-300/20 placeholder:text-slate-400 dark:placeholder:text-slate-600 dark:text-slate-500 focus:border-cyan-500/60 dark:border-cyan-300/60 focus:ring-4"
           placeholder="기기 정보 (예: iPhone 16 Pro)"
           value={newTesterForm.device}
           onChange={(event) =>
@@ -154,7 +154,7 @@ export function FeatureTestersSection({
           }
         />
         <input
-          className="w-full rounded-xl border border-white/15 bg-black/35 px-3 py-2.5 text-sm text-slate-100 outline-none ring-cyan-300/20 placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-4"
+          className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none ring-cyan-500/20 dark:ring-cyan-300/20 placeholder:text-slate-400 dark:placeholder:text-slate-600 dark:text-slate-500 focus:border-cyan-500/60 dark:border-cyan-300/60 focus:ring-4"
           placeholder="OS 버전 (예: iOS 19.0)"
           value={newTesterForm.osVersion}
           onChange={(event) =>
@@ -175,11 +175,13 @@ export function FeatureTestersSection({
       </div>
 
       {newTesterFormError ? (
-        <p className="mt-2 text-xs text-rose-200">{newTesterFormError}</p>
+        <p className="mt-2 text-xs text-rose-700 dark:text-rose-200">
+          {newTesterFormError}
+        </p>
       ) : null}
 
       {testers.length === 0 ? (
-        <div className="mt-4 rounded-2xl border border-dashed border-white/25 bg-white/2 p-4 text-sm text-slate-300">
+        <div className="mt-4 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-4 text-sm text-slate-700 dark:text-slate-300">
           아직 등록된 진행자가 없습니다. 진행자를 추가하면 시나리오별로 상태와
           메모를 개별 기록할 수 있습니다.
         </div>
@@ -188,12 +190,12 @@ export function FeatureTestersSection({
           {testers.map((tester) => (
             <article
               key={tester.id}
-              className="rounded-xl border border-white/10 bg-black/20 px-3 py-2.5"
+              className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 px-3 py-2.5"
             >
               {editingTesterId === tester.id ? (
                 <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto]">
                   <input
-                    className="w-full rounded-xl border border-white/15 bg-black/35 px-3 py-2.5 text-sm text-slate-100 outline-none ring-cyan-300/20 placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-4"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none ring-cyan-500/20 dark:ring-cyan-300/20 placeholder:text-slate-400 dark:placeholder:text-slate-600 dark:text-slate-500 focus:border-cyan-500/60 dark:border-cyan-300/60 focus:ring-4"
                     placeholder="진행자명"
                     value={editingTesterForm.name}
                     onChange={(event) =>
@@ -204,7 +206,7 @@ export function FeatureTestersSection({
                     }
                   />
                   <input
-                    className="w-full rounded-xl border border-white/15 bg-black/35 px-3 py-2.5 text-sm text-slate-100 outline-none ring-cyan-300/20 placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-4"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none ring-cyan-500/20 dark:ring-cyan-300/20 placeholder:text-slate-400 dark:placeholder:text-slate-600 dark:text-slate-500 focus:border-cyan-500/60 dark:border-cyan-300/60 focus:ring-4"
                     placeholder="기기 정보"
                     value={editingTesterForm.device}
                     onChange={(event) =>
@@ -215,7 +217,7 @@ export function FeatureTestersSection({
                     }
                   />
                   <input
-                    className="w-full rounded-xl border border-white/15 bg-black/35 px-3 py-2.5 text-sm text-slate-100 outline-none ring-cyan-300/20 placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-4"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none ring-cyan-500/20 dark:ring-cyan-300/20 placeholder:text-slate-400 dark:placeholder:text-slate-600 dark:text-slate-500 focus:border-cyan-500/60 dark:border-cyan-300/60 focus:ring-4"
                     placeholder="OS 버전"
                     value={editingTesterForm.osVersion}
                     onChange={(event) =>
@@ -251,7 +253,7 @@ export function FeatureTestersSection({
                   </ChipButton>
 
                   {editingTesterFormError ? (
-                    <p className="text-xs text-rose-200 md:col-span-6">
+                    <p className="text-xs text-rose-700 dark:text-rose-200 md:col-span-6">
                       {editingTesterFormError}
                     </p>
                   ) : null}
@@ -259,10 +261,10 @@ export function FeatureTestersSection({
               ) : (
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-100">
+                    <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
                       {tester.name}
                     </p>
-                    <p className="truncate text-xs text-slate-400">
+                    <p className="truncate text-xs text-slate-600 dark:text-slate-400">
                       {[
                         tester.device || "기기 미입력",
                         tester.osVersion || "OS 미입력",

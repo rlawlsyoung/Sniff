@@ -27,7 +27,7 @@ export function PaginationControls({
       >
         이전
       </ChipButton>
-      <span className="px-2 text-sm text-slate-300">
+      <span className="px-2 text-sm text-slate-700 dark:text-slate-300">
         {currentPage} / {totalPages}
       </span>
       <ChipButton
