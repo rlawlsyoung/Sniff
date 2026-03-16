@@ -587,13 +587,18 @@ export function useFeatureFiles() {
           const testerResults = { ...scenario.testerResults };
           delete testerResults[testerId];
 
+          const status =
+            nextTesters.length === 0
+              ? "todo"
+              : getScenarioStatusByTesterResults(
+                  { ...scenario, testerResults },
+                  nextTesters,
+                );
+
           return {
             ...scenario,
             testerResults,
-            status: getScenarioStatusByTesterResults(
-              { ...scenario, testerResults },
-              nextTesters,
-            ),
+            status,
           };
         });
 
