@@ -36,6 +36,16 @@ type FeatureFilesRealtimeEvent = {
   updatedAt: string;
 };
 
+export type RenameFeatureFileResult =
+  | {
+      ok: true;
+      fileName: string;
+    }
+  | {
+      ok: false;
+      message: string;
+    };
+
 function replaceFeatureFile(
   previous: QaFeatureFile[],
   nextFile: QaFeatureFile,
@@ -452,6 +462,57 @@ export function useFeatureFiles() {
     [applyFeatureFileMutation],
   );
 
+  const renameFeatureFile = useCallback(
+    (fileId: string, nextFileName: string): RenameFeatureFileResult => {
+      const trimmedFileName = nextFileName.trim();
+      if (!trimmedFileName) {
+        return {
+          ok: false,
+          message: "파일 제목은 비워둘 수 없습니다.",
+        };
+      }
+
+      const target = featureFilesRef.current.find((item) => item.id === fileId);
+      if (!target) {
+        return {
+          ok: false,
+          message: "수정할 Feature 파일을 찾지 못했습니다.",
+        };
+      }
+
+      const hasDuplicatedFileName = featureFilesRef.current.some(
+        (item) =>
+          item.id !== fileId &&
+          item.fileName.toLowerCase() === trimmedFileName.toLowerCase(),
+      );
+      if (hasDuplicatedFileName) {
+        return {
+          ok: false,
+          message: "같은 제목의 Feature 파일이 이미 있습니다.",
+        };
+      }
+
+      if (target.fileName === trimmedFileName) {
+        return {
+          ok: true,
+          fileName: trimmedFileName,
+        };
+      }
+
+      applyFeatureFileMutation(fileId, (file) => ({
+        ...file,
+        fileName: trimmedFileName,
+        updatedAt: new Date().toISOString(),
+      }));
+
+      return {
+        ok: true,
+        fileName: trimmedFileName,
+      };
+    },
+    [applyFeatureFileMutation],
+  );
+
   const removeFeatureFile = useCallback(
     (fileId: string) => {
       cancelFeatureFileSync(fileId);
@@ -711,6 +772,7 @@ export function useFeatureFiles() {
     importFeatureText,
     updateScenarioStatus,
     updateScenarioNote,
+    renameFeatureFile,
     addTester,
     updateTester,
     removeTester,

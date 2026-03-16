@@ -20,6 +20,7 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
     isHydrated,
     syncError,
     featureFileMap,
+    renameFeatureFile,
     addTester,
     updateTester,
     removeTester,
@@ -43,6 +44,13 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
       updateScenarioTesterResult(featureId, scenarioId, testerId, updates);
     },
     [featureId, updateScenarioTesterResult],
+  );
+
+  const onRenameFeature = useCallback(
+    (nextFileName: string) => {
+      return renameFeatureFile(featureId, nextFileName);
+    },
+    [featureId, renameFeatureFile],
   );
 
   const onScrollToTop = useCallback(() => {
@@ -85,6 +93,7 @@ export function FeatureDetailPage({ featureId }: FeatureDetailPageProps) {
           fileName={featureFile.fileName}
           featureNames={featureFile.featureNames}
           updatedAt={featureFile.updatedAt}
+          onRenameFeature={onRenameFeature}
           onDeleteFeature={onDeleteFeature}
         />
 

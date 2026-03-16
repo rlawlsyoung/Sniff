@@ -11,6 +11,7 @@ type FeatureFileListSectionProps = {
   totalPages: number;
   onPrevPage: () => void;
   onNextPage: () => void;
+  onRename: (id: string, nextFileName: string) => boolean;
   onDelete: (id: string) => void;
 };
 
@@ -23,6 +24,7 @@ export function FeatureFileListSection({
   totalPages,
   onPrevPage,
   onNextPage,
+  onRename,
   onDelete,
 }: FeatureFileListSectionProps) {
   return (
@@ -51,6 +53,7 @@ export function FeatureFileListSection({
             <FeatureFileCard
               key={featureFile.id}
               featureFile={featureFile}
+              onRename={onRename}
               onDelete={onDelete}
             />
           ))

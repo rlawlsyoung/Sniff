@@ -34,6 +34,7 @@ export default function QaDashboardPage() {
     syncError,
     refreshFeatureFiles,
     importFeatureText,
+    renameFeatureFile,
     removeFeatureFile,
   } = useFeatureFiles();
   const [rawText, setRawText] = useState("");
@@ -178,6 +179,23 @@ export default function QaDashboardPage() {
     setPendingDeleteId(fileId);
   };
 
+  const onRename = useCallback(
+    (fileId: string, nextFileName: string) => {
+      const result = renameFeatureFile(fileId, nextFileName);
+      if (!result.ok) {
+        setNotice({ type: "error", message: result.message });
+        return false;
+      }
+
+      setNotice({
+        type: "success",
+        message: `파일 제목을 '${result.fileName}'(으)로 변경했습니다.`,
+      });
+      return true;
+    },
+    [renameFeatureFile],
+  );
+
   const onConfirmDelete = () => {
     if (!pendingDeleteId) {
       return;
@@ -294,6 +312,7 @@ export default function QaDashboardPage() {
         totalPages={totalPages}
         onPrevPage={onPrevPage}
         onNextPage={onNextPage}
+        onRename={onRename}
         onDelete={onDelete}
       />
 

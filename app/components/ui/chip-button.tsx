@@ -1,4 +1,5 @@
 import { ComponentPropsWithoutRef } from "react";
+import { twMerge } from "tailwind-merge";
 
 type ChipButtonVariant =
   | "neutral"
@@ -43,16 +44,12 @@ const CHIP_BUTTON_VARIANT_CLASSNAME: Record<ChipButtonVariant, string> = {
   custom: "",
 };
 
-function joinClassNames(...parts: Array<string | undefined>) {
-  return parts.filter(Boolean).join(" ");
-}
-
 export function chipButtonClassName({
   variant = "neutral",
   size = "md",
   className,
 }: ChipButtonClassOptions = {}) {
-  return joinClassNames(
+  return twMerge(
     CHIP_BUTTON_BASE_CLASSNAME,
     CHIP_BUTTON_SIZE_CLASSNAME[size],
     CHIP_BUTTON_VARIANT_CLASSNAME[variant],
