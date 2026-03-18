@@ -43,7 +43,7 @@ export function FeatureFileListSection({
         </div>
       </section>
 
-      <section className="grid gap-3 pb-8 [animation:fade-up_560ms_ease-out_180ms_both]">
+      <section className="grid gap-4 pb-8 [animation:fade-up_560ms_ease-out_180ms_both]">
         {pagedItems.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-900/50 p-8 text-center text-sm text-slate-700 dark:text-slate-300">
             조건에 맞는 Feature 파일이 없습니다.

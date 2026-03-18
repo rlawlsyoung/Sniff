@@ -129,6 +129,8 @@ export function FeatureScenariosSection({
         failed={stats.failed}
       />
 
+      {middleContent}
+
       <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/50 p-5 shadow-sm shadow-slate-200/40 dark:shadow-none backdrop-blur-xl">
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -275,9 +277,9 @@ export function FeatureScenariosSection({
         </div>
       </section>
 
-      {middleContent}
+      <div className="h-[1px] bg-slate-200 dark:bg-slate-700" />
 
-      <section className="grid gap-3 pb-8">
+      <section className="grid gap-4 pb-8">
         {filteredScenarios.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-8 text-center text-sm text-slate-700 dark:text-slate-300">
             조건에 맞는 시나리오가 없습니다.
